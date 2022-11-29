@@ -1,5 +1,10 @@
 library(socialmixr)
+library(data.table)
+library(ggplot2)
+library(gridExtra)
+library(wpp2019)
 
+##### Load in all the data #####
 # Data from Ben's github repo https://github.com/BenSCooper/fluvaxmod/
 data <- list()
 
@@ -68,5 +73,225 @@ data[["2008to2009"]] <- list(
   IPDbyage=matrix( 
     c(7,17,9,9,70,13,12,29,25,23,137,20,17,58,51,38,143,31,22,52,46,34,149,37,19,39,51,33,88,28,29,38,46,31,92,21,16,21,33,23,119,22,17,33,49,39,137,14,16,20,22,11,86,17,18,34,36,27,129,28,14,23,31,28,90,21,10,21,24,21,91,17),
     nrow=6, ncol=12
+  ))
+  
+
+##### Reformat into one and make some investigative plots! ##### 
+### Want to create a data.table with all the data in, so we cna plot it over tiem
+  
+  all_input_data <- data.table(
+    month = rep(c(4:12,1,2,3),4),
+    year = c(rep(2005,9), rep(2006,12), rep(2007,12), rep(2008, 12), rep(2009,3)), 
+    tested = c(data[[1]]$Numtestedbymonth, data[[2]]$Numtestedbymonth,
+               data[[3]]$Numtestedbymonth, data[[4]]$Numtestedbymonth) , 
+    fluAH1 = c(data[[1]]$fluAH1posbymonth, data[[2]]$fluAH1posbymonth,
+             data[[3]]$fluAH1posbymonth, data[[4]]$fluAH1posbymonth) , 
+    fluAH3 = c(data[[1]]$fluAH3posbymonth, data[[2]]$fluAH3posbymonth,
+               data[[3]]$fluAH3posbymonth, data[[4]]$fluAH3posbymonth) , 
+    fluB = c(data[[1]]$fluBposbymonth, data[[2]]$fluBposbymonth,
+               data[[3]]$fluBposbymonth, data[[4]]$fluBposbymonth), 
+    IlI_age_0_2 = c(data[[1]]$ILIbyage[1,], data[[2]]$ILIbyage[1,],
+                 data[[3]]$ILIbyage[1,], data[[4]]$ILIbyage[1,]),
+    IlI_age_2_5 = c(data[[1]]$ILIbyage[2,], data[[2]]$ILIbyage[2,],
+                 data[[3]]$ILIbyage[2,], data[[4]]$ILIbyage[2,]),
+    IlI_age_6_11 = c(data[[1]]$ILIbyage[3,], data[[2]]$ILIbyage[3,],
+                 data[[3]]$ILIbyage[3,], data[[4]]$ILIbyage[3,]),
+    IlI_age_12_17 = c(data[[1]]$ILIbyage[4,], data[[2]]$ILIbyage[4,],
+                 data[[3]]$ILIbyage[4,], data[[4]]$ILIbyage[4,]),
+    IlI_age_18_59 = c(data[[1]]$ILIbyage[5,], data[[2]]$ILIbyage[5,],
+                      data[[3]]$ILIbyage[5,], data[[4]]$ILIbyage[5,]),
+    IlI_age_60 = c(data[[1]]$ILIbyage[6,], data[[2]]$ILIbyage[6,],
+                      data[[3]]$ILIbyage[6,], data[[4]]$ILIbyage[6,])
   )
-)
+  
+all_input_data[, date := as.Date(paste0(year, "-", month,"-01"))]
+all_input_data[,all_ILI := IlI_age_0_2 + IlI_age_2_5 + 
+                 IlI_age_6_11 + IlI_age_12_17 + IlI_age_18_59 + 
+                 IlI_age_60]
+
+ili_by_age <- melt.data.table(all_input_data, 
+                              id.vars = c("date"), 
+                              measure.vars = c(
+                                "IlI_age_0_2", 
+                                "IlI_age_2_5",
+                                "IlI_age_6_11",
+                                "IlI_age_12_17", 
+                                "IlI_age_18_59", 
+                                "IlI_age_60"
+                              ))
+
+
+positives_time <- melt.data.table(all_input_data, id.vars = c("date"), measure.vars = c("tested",
+                                                                          "fluAH1", 
+                                                                          "fluAH3", 
+                                                                          "fluB", 
+                                                                          "all_ILI"))
+ALL_TESTED <- ggplot(positives_time, aes(x = date, y =value, colour = variable )) + 
+  geom_line() + 
+  theme_linedraw() + 
+  geom_point() +
+  facet_grid(variable~., scales = "free_y") + 
+  labs(x = "Month", y = "Number positive or Number tested") + 
+  theme(legend.position = "none")
+  
+SUBTYPES_TIME <- ggplot(positives_time[variable != "tested", ], aes(x = date, y =value, colour = variable )) + 
+  geom_line() + 
+  theme_linedraw() + 
+  geom_point()+
+  labs(x = "Month", y = "Number positive or Number tested", 
+       colour = "subtype")
+
+ILI_BY_AGE <- ggplot(ili_by_age, aes (x = date, 
+                                      y = value, 
+                                      colour = variable)) + 
+  geom_line() + 
+  theme_linedraw() + 
+  facet_grid(variable~., scales = "free_y") + 
+  labs(x = "Month", y = "ILI", 
+       colour = "age")
+  
+#### defining the epidemics ####
+
+# start = two months subtype specific going up 
+# end = two months subtype specific going down
+# and over median at all time points in the epidmic
+
+# ignore if only one month out of sync (either up or down)
+
+identify_seasons <- function(input_data){
+  
+  input_data$flu_median <- input_data[,quantile(flu, probs= 0.75)]
+  input_data$over_median <- F
+  input_data[flu_median< flu, over_median := T]
+  input_data[flu > shift(flu, type = "lag", n=1L),
+             direction := "increasing" ]
+  input_data[flu < shift(flu, type = "lag", n=1L),
+             direction := "decreasing" ]
+  input_data[flu == shift(flu, type = "lag", n=1L),
+             direction := "constant" ]
+  
+  # look for starts
+  input_data[direction == "increasing" & 
+               shift(direction, type = "lead", n=1L) == "increasing",
+             turn_point := "start" ]
+  # look for ends
+  input_data[direction == "decreasing" & 
+               shift(direction, type = "lead", n=1L) == "decreasing",
+             turn_point := "end" ]
+  
+  # find spans where there is a start, carry on till an end, then take the last of those ends
+  starts <- which(input_data$turn_point == "start")
+  ends <- which(input_data$turn_point == "end")
+  ends_remaining <- ends
+  starts_ends <- data.frame()
+  end_0 <-0
+  
+  for(i in 1:nrow(input_data)){
+    
+    if(i %in% starts & i > end_0){
+      end_0 <- ends_remaining[which(ends_remaining > i)][1]
+      test_end <- end_0+1
+      if(is.na(test_end)){break("reached end")}
+      
+      while (end_0 == (test_end-1)){
+        if((test_end+1) %in% ends_remaining){
+          test_end <- test_end+1
+        }
+        end_0 <- end_0+1
+      }
+      # now need to save start and end
+      starts_ends <-rbind(starts_ends, c(i, end_0))
+    }
+    
+  }
+  
+  input_data$epidem_on <- 0
+  
+  for( i in 1:nrow(starts_ends)){
+    input_data[starts_ends[i,1]:starts_ends[i,2],"epidem_on"] <- 1
+  }
+  
+  input_data$epidem_class <- 0
+  input_data[epidem_on == 1 & over_median == T, epidem_class:=1]
+  # if the epidemi_on value is different from the before and the below, 
+  # then change it to that.  I.e. no sets of 1 montha llowed.
+
+  input_data[ epidem_class != shift(epidem_class, type = "lag", n=1L), 
+              epidem_test := "shifty"]
+  input_data[ epidem_class != shift(epidem_class, type = "lead", n=1L), 
+              epidem_test2 := "shifty"]
+
+  # note the double positives
+  input_data[(epidem_test == "shifty") & (epidem_test2 == "shifty") &
+               (shift(epidem_test, type = "lead", n=1L)== "shifty") &
+               (shift(epidem_test2, type = "lead", n=1L) == "shifty") &
+               (epidem_class == 1), epidem_test3 := "leave"]
+  input_data[(epidem_test == "shifty") & (epidem_test2 == "shifty") &
+               (shift(epidem_test, type = "lead", n=1L)== "shifty") &
+               (shift(epidem_test2, type = "lead", n=1L) == "shifty") &
+               (epidem_class == 0), epidem_test3 := "leave"]
+  #flip the ones in the middle
+input_data[, epidem_inclusion := epidem_class]
+  input_data[(epidem_test == "shifty") & (epidem_test2 == "shifty") &
+               (epidem_class == 0) & (is.na(epidem_test3))
+               , epidem_inclusion := 1]
+  input_data[(epidem_test == "shifty") & (epidem_test2 == "shifty") &
+               (epidem_class == 1)& (is.na(epidem_test3)),
+             epidem_inclusion := 0]
+  
+  
+  input_data[, c("flu_median", "over_median", "direction",
+                 "turn_point", "epidem_on", "epidem_test", 
+                 "epidem_test2", "epidem_test3", "epidem_class") := NULL]
+  
+  return(input_data)
+}
+
+fluAH1_epidemics <- all_input_data[, c("date","tested", "fluAH1")]
+colnames(fluAH1_epidemics) <- c("date", "tested", "flu")
+fluAH1_epidemics <- identify_seasons(fluAH1_epidemics)
+
+fluAH3_epidemics <- all_input_data[, c("date","tested", "fluAH3")]
+colnames(fluAH3_epidemics) <- c("date", "tested", "flu")
+fluAH3_epidemics <- identify_seasons(fluAH3_epidemics)
+
+fluB_epidemics <- all_input_data[, c("date","tested", "fluB")]
+colnames(fluB_epidemics) <- c("date", "tested", "flu")
+fluB_epidemics <- identify_seasons(fluB_epidemics)
+
+fluAH1_epidemics[, visualiser := epidem_inclusion*max(fluAH1_epidemics$flu)*1.1]
+
+AH1_EPIS <-ggplot(fluAH1_epidemics, aes(x = date)) + 
+  geom_line(aes(y=flu), colour = "red") + 
+  geom_line(aes(y = visualiser)) + theme_linedraw() + 
+  labs(y = "AH1")
+
+fluAH3_epidemics[, visualiser := epidem_inclusion*max(fluAH3_epidemics$flu)*1.1]
+
+AH3_EPIS <-ggplot(fluAH3_epidemics, aes(x = date)) + 
+  geom_line(aes(y=flu), colour = "red") + 
+  geom_line(aes(y = visualiser)) + theme_linedraw() + 
+  labs(y = "AH3")
+
+fluB_epidemics[, visualiser := epidem_inclusion*max(fluB_epidemics$flu)*1.1]
+
+B_EPIS <-ggplot(fluB_epidemics, aes(x = date)) + 
+  geom_line(aes(y=flu), colour = "red") + 
+  geom_line(aes(y = visualiser)) + theme_linedraw() + 
+  labs(y = "B")
+  
+grid.arrange(AH1_EPIS, AH3_EPIS, B_EPIS, ncol= 1)
+
+
+
+data(popM)
+popM <- data.table(popM)
+male_age <- unlist(popM[name == "Thailand", "2015"])
+data(popF)
+popF <- data.table(popF)
+female_age <- unlist(popF[name == "Thailand", "2015"])
+
+pop_by_age <- female_age+male_age
+pop_by_age <- rep(pop_by_age/5, each = 5)*1000
+
+  

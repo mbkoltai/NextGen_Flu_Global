@@ -10,18 +10,18 @@
 
 library(tidyverse)
 #Read in participant information
-part.info<- read.csv(here::here("Epi/Data/SMILI_Thailand_2015", "2015_Meeyai_Thailand_participant_common.csv"))
+part.info<- read.csv(here::here("Data/SMILI_Thailand_2015", "2015_Meeyai_Thailand_participant_common.csv"))
 participant <- part.info %>% dplyr::select(part_id, part_age)
 
 #Read in contact information
-cont.info<- read.csv(here::here("Epi/Data/SMILI_Thailand_2015", "2015_Meeyai_Thailand_contact_common.csv"))
+cont.info<- read.csv(here::here("Data/SMILI_Thailand_2015", "2015_Meeyai_Thailand_contact_common.csv"))
 contact <- cont.info %>% dplyr::select(part_id, cnt_age_exact)
 #Note: there are 119 unique participant_ids in the contact df who do not appear in the 
 #participant df and so we have not data on their ages. These participants are excluded from the 
 #final dataframe created
 
 #Read in data on when diary was filled 
-sday.info <- read.csv(here::here("Epi/Data/SMILI_Thailand_2015", "2015_Meeyai_Thailand_sday.csv"))
+sday.info <- read.csv(here::here("Data/SMILI_Thailand_2015", "2015_Meeyai_Thailand_sday.csv"))
 
 table(sday.info$dayofweek, sday.info$holiday)
 #Note: this shows that each day of the week may be a working day or holiday, depending on who 
