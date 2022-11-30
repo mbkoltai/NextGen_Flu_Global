@@ -2,7 +2,7 @@
 custom_inference <- function(input_demography, vaccine_calendar, input_polymod, ili = NULL, 
                              mon_pop = NULL, n_pos, n_samples, initial, mapping,
                              nbatch, nburn, blen) {
-  
+
   current.contact.ids <- seq(1,nrow(polymod_uk))
   proposed.contact.ids <- current.contact.ids
   
@@ -32,7 +32,7 @@ custom_inference <- function(input_demography, vaccine_calendar, input_polymod, 
     
     # Run simulation
     # Note that to reduce complexity 
-    
+
     # we are using the same susceptibility parameter for multiple age groups
     odes <- infectionODEs(
       population = age.groups,
@@ -44,7 +44,7 @@ custom_inference <- function(input_demography, vaccine_calendar, input_polymod, 
       infection_delays = c(0.8,1.8),
       initial_infected = initial.infected,
       interval = 7)
-    
+
     odes <- data.table(odes)
     # Ignore times row
     odes[,Month := month(Time)]
@@ -66,10 +66,12 @@ custom_inference <- function(input_demography, vaccine_calendar, input_polymod, 
     return(total_ll)
   }
   llprior <- function(pars) {
-    if (any(pars[2:4] < 0) || any(pars[c(3)] > 1)
+ 
+    if (pars[2] < 0 || any(pars[c(3)] > 1)
         || pars[4] < log(0.00001) || pars[4] > 29.5 ) # 29.5 as 0.01% of population
       return(-Inf)
     lprob <- 0
+    c(-10.5, 10, 0.7, 1, 0, 0)
     # lprob <- dnorm(pars[5], 0.1653183, 0.02773053, 1)
     # lprob <- lprob + dlnorm(pars[1], -4.493789, 0.2860455, 1)
     # lprob <- lprob + dlnorm(pars[2], -4.117028, 0.4751615, 1)

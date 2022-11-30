@@ -9,11 +9,12 @@ source(here::here("Fitting","inference_function.R"))
 source(here::here("Fitting","data_for_fitting.R"))
 source(here::here("Fitting","creating_contacts.R"))
 
-epidemic_to_run <- 2
+epidemic_to_run <- 6
 post_size <- 10000
 thinning_steps <- 1000
-burn_in <- 100000
+burn_in <- 10000
 seed_to_use <- 67
+save <- T
 
 set.seed(seed_to_use)
 
@@ -56,9 +57,10 @@ output_list <- list (
   seed = seed_to_use
 )
 
+if(save == T){
 saveRDS(output_list, file = here::here("Fitting", "Fits", 
                                         paste0("mcmc_", epidemic_to_run,
                                                "_", post_size, "_", Sys.time())))
-
+}
 
 beep(4)

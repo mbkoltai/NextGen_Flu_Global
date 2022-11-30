@@ -32,7 +32,7 @@ TRACE_THINNED
 # has todo with loading the correct inputs for the ODE model
 ode.results <- function( pars, input_demography = pop_by_age ) 
 {
-  
+
   age.group.limits <- c(2,6,12,18,60)
  
   contacts <- fluEvidenceSynthesis::contact_matrix(as.matrix(polymod.thai),
@@ -68,15 +68,15 @@ ode.results <- function( pars, input_demography = pop_by_age )
   return( monthly_cases )}
 
 
-sample_no<- sample(c(1:nrow(post_samples)), 1)
+sample_no<- sample(c(1:nrow(post_samples)), n_samples, replace=T)
 out_run <- list()
 
 for(i in 1:n_samples){
   
-  test_params <- post_samples[sample_no[i],]
-  temp_out <- ode.results(unlist(test_params))
+  test_params <- unlist(post_samples[sample_no[i],])
+  temp_out <-  ode.results(unlist(test_params)[1:4])
   temp_out$timestep <- 1:nrow(temp_out)
-  temp_out$V1 <-temp_out$V1* exp(post_samples[sample_no[i],1])
+  temp_out$V1 <-temp_out$V1* exp(test_params[1])
   out_run[[i]] <- temp_out 
   
 }

@@ -159,91 +159,42 @@ ILI_BY_AGE <- ggplot(ili_by_age, aes (x = date,
 # ignore if only one month out of sync (either up or down)
 
 identify_seasons <- function(input_data){
+
+  input_data$flu_peak <- input_data[,quantile(flu, probs= 0.9)]
+  input_data$over_peak <- F
+  input_data[flu_peak< flu, over_peak := T]
   
-  input_data$flu_median <- input_data[,quantile(flu, probs= 0.75)]
-  input_data$over_median <- F
-  input_data[flu_median< flu, over_median := T]
-  input_data[flu > shift(flu, type = "lag", n=1L),
-             direction := "increasing" ]
-  input_data[flu < shift(flu, type = "lag", n=1L),
-             direction := "decreasing" ]
-  input_data[flu == shift(flu, type = "lag", n=1L),
-             direction := "constant" ]
+  input_data$flu_included <- input_data[,quantile(flu, probs= 0.6)]
+  input_data$over_inclusion<- F
+  input_data[flu_included< flu, over_inclusion := T]
   
-  # look for starts
-  input_data[direction == "increasing" & 
-               shift(direction, type = "lead", n=1L) == "increasing",
-             turn_point := "start" ]
-  # look for ends
-  input_data[direction == "decreasing" & 
-               shift(direction, type = "lead", n=1L) == "decreasing",
-             turn_point := "end" ]
+  tmp <- rle(input_data$over_inclusion)
+  input_data$Seq <- rep(tmp$lengths >= 2,times = tmp$lengths)
   
-  # find spans where there is a start, carry on till an end, then take the last of those ends
-  starts <- which(input_data$turn_point == "start")
-  ends <- which(input_data$turn_point == "end")
-  ends_remaining <- ends
-  starts_ends <- data.frame()
-  end_0 <-0
-  
-  for(i in 1:nrow(input_data)){
+  # add the sequence number to each
+  seq_to_add <- c()
+  start_seq <- 1
+  for(i in 1:length(tmp$lengths)){
     
-    if(i %in% starts & i > end_0){
-      end_0 <- ends_remaining[which(ends_remaining > i)][1]
-      test_end <- end_0+1
-      if(is.na(test_end)){break("reached end")}
-      
-      while (end_0 == (test_end-1)){
-        if((test_end+1) %in% ends_remaining){
-          test_end <- test_end+1
-        }
-        end_0 <- end_0+1
+     length_run <- tmp$lengths[i]
+    tester <- input_data[sum(tmp$lengths[1:i]),"over_inclusion"]
+    if(tester == F){ 
+      seq_to_add <- c(seq_to_add, rep(0,length_run))
+    } else {
+      seq_to_add <- c(seq_to_add, rep(start_seq,length_run))
+      start_seq <- start_seq + 1
       }
-      # now need to save start and end
-      starts_ends <-rbind(starts_ends, c(i, end_0))
-    }
+  }
+  
+  input_data$seq <- seq_to_add
+  input_data$epidem_inclusion <- 0
+  for(j in 1:start_seq){
     
+    if(any(input_data[seq == j,"over_peak"]==T)){
+      input_data[seq == j, epidem_inclusion := 1 ]
+    }
   }
-  
-  input_data$epidem_on <- 0
-  
-  for( i in 1:nrow(starts_ends)){
-    input_data[starts_ends[i,1]:starts_ends[i,2],"epidem_on"] <- 1
-  }
-  
-  input_data$epidem_class <- 0
-  input_data[epidem_on == 1 & over_median == T, epidem_class:=1]
-  # if the epidemi_on value is different from the before and the below, 
-  # then change it to that.  I.e. no sets of 1 montha llowed.
 
-  input_data[ epidem_class != shift(epidem_class, type = "lag", n=1L), 
-              epidem_test := "shifty"]
-  input_data[ epidem_class != shift(epidem_class, type = "lead", n=1L), 
-              epidem_test2 := "shifty"]
-
-  # note the double positives
-  input_data[(epidem_test == "shifty") & (epidem_test2 == "shifty") &
-               (shift(epidem_test, type = "lead", n=1L)== "shifty") &
-               (shift(epidem_test2, type = "lead", n=1L) == "shifty") &
-               (epidem_class == 1), epidem_test3 := "leave"]
-  input_data[(epidem_test == "shifty") & (epidem_test2 == "shifty") &
-               (shift(epidem_test, type = "lead", n=1L)== "shifty") &
-               (shift(epidem_test2, type = "lead", n=1L) == "shifty") &
-               (epidem_class == 0), epidem_test3 := "leave"]
-  #flip the ones in the middle
-input_data[, epidem_inclusion := epidem_class]
-  input_data[(epidem_test == "shifty") & (epidem_test2 == "shifty") &
-               (epidem_class == 0) & (is.na(epidem_test3))
-               , epidem_inclusion := 1]
-  input_data[(epidem_test == "shifty") & (epidem_test2 == "shifty") &
-               (epidem_class == 1)& (is.na(epidem_test3)),
-             epidem_inclusion := 0]
-  
-  
-  input_data[, c("flu_median", "over_median", "direction",
-                 "turn_point", "epidem_on", "epidem_test", 
-                 "epidem_test2", "epidem_test3", "epidem_class") := NULL]
-  
   return(input_data)
 }
 
@@ -260,27 +211,33 @@ colnames(fluB_epidemics) <- c("date", "tested", "flu")
 fluB_epidemics <- identify_seasons(fluB_epidemics)
 
 fluAH1_epidemics[, visualiser := epidem_inclusion*max(fluAH1_epidemics$flu)*1.1]
+fluAH1_epidemics[, visualiser_peak := over_peak*max(fluAH1_epidemics$flu)*1.1]
 
 AH1_EPIS <-ggplot(fluAH1_epidemics, aes(x = date)) + 
   geom_line(aes(y=flu), colour = "red") + 
-  geom_line(aes(y = visualiser)) + theme_linedraw() + 
-  labs(y = "AH1")
+ geom_point(aes(y = visualiser_peak)) + theme_linedraw() + 
+  labs(y = "AH1") + 
+  lims(y = c(0,163))
 
 fluAH3_epidemics[, visualiser := epidem_inclusion*max(fluAH3_epidemics$flu)*1.1]
+fluAH3_epidemics[, visualiser_peak := over_peak*max(fluAH3_epidemics$flu)*1.1]
 
 AH3_EPIS <-ggplot(fluAH3_epidemics, aes(x = date)) + 
   geom_line(aes(y=flu), colour = "red") + 
-  geom_line(aes(y = visualiser)) + theme_linedraw() + 
-  labs(y = "AH3")
+ geom_point(aes(y = visualiser_peak)) + theme_linedraw() + 
+  labs(y = "AH3")+ 
+  lims(y = c(0,163))
 
 fluB_epidemics[, visualiser := epidem_inclusion*max(fluB_epidemics$flu)*1.1]
+fluB_epidemics[, visualiser_peak := over_peak*max(fluB_epidemics$flu)*1.1]
 
 B_EPIS <-ggplot(fluB_epidemics, aes(x = date)) + 
   geom_line(aes(y=flu), colour = "red") + 
-  geom_line(aes(y = visualiser)) + theme_linedraw() + 
-  labs(y = "B")
+  geom_point(aes(y = visualiser_peak)) + theme_linedraw() + 
+  labs(y = "B")+ 
+  lims(y = c(0,163))
   
-grid.arrange(AH1_EPIS, AH3_EPIS, B_EPIS, ncol= 1)
+#grid.arrange(AH1_EPIS, AH3_EPIS, B_EPIS, ncol= 1)
 
 
 
