@@ -19,12 +19,14 @@ post_samples_m <- melt.data.table(post_samples, id.vars = "timestep")
 
 DENSITY <- ggplot(post_samples_m) + 
   facet_wrap( ~ variable, ncol=3, scales="free" ) +
-  geom_histogram(aes(x=value), bins=25)
+  geom_histogram(aes(x=value), bins=25) + 
+  labs(title = paste0("Epidemic ", epidemic_to_run))
 DENSITY
 
 TRACE_THINNED <- ggplot(post_samples_m, aes(x = timestep, y = value)) + 
   facet_grid(variable~., scales = "free_y") + 
-  geom_line()
+  geom_line() + 
+  labs(title = paste0("Epidemic ", epidemic_to_run))
 
 TRACE_THINNED
 
@@ -89,7 +91,9 @@ for(i in 1:n_samples){
 print(
   ggplot(spaghetti_out, aes(x = timestep, y = V1, group = sample)) + 
   geom_line(alpha = 0.5)+ 
-    geom_point(data = data_fitted,aes(x = timestep, y = V1, group =NULL), colour = "red")
+    geom_point(data = data_fitted,aes(x = timestep, y = V1, group =NULL),
+               colour = "red") + 
+    labs(title = paste0("Epidemic ", epidemic_to_run))
   )
 
 

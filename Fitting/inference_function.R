@@ -67,7 +67,7 @@ custom_inference <- function(input_demography, vaccine_calendar, input_polymod, 
   }
   llprior <- function(pars) {
  
-    if (pars[2] < 0 || any(pars[c(3)] > 1)
+    if (pars[c(2)] < 0 || any(pars[c(3)] > 1) ||  any(pars[c(3)] < 0.25)
         || pars[4] < log(0.00001) || pars[4] > 29.5 ) # 29.5 as 0.01% of population
       return(-Inf)
     lprob <- 0

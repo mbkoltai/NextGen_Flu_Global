@@ -185,7 +185,7 @@ identify_seasons <- function(input_data){
       start_seq <- start_seq + 1
       }
   }
-  
+
   input_data$seq <- seq_to_add
   input_data$epidem_inclusion <- 0
   for(j in 1:start_seq){
@@ -215,7 +215,9 @@ fluAH1_epidemics[, visualiser_peak := over_peak*max(fluAH1_epidemics$flu)*1.1]
 
 AH1_EPIS <-ggplot(fluAH1_epidemics, aes(x = date)) + 
   geom_line(aes(y=flu), colour = "red") + 
- geom_point(aes(y = visualiser_peak)) + theme_linedraw() + 
+ geom_line(aes(y = visualiser)) + 
+  geom_point(aes(y = visualiser)) + 
+  theme_linedraw() + 
   labs(y = "AH1") + 
   lims(y = c(0,163))
 
@@ -224,7 +226,9 @@ fluAH3_epidemics[, visualiser_peak := over_peak*max(fluAH3_epidemics$flu)*1.1]
 
 AH3_EPIS <-ggplot(fluAH3_epidemics, aes(x = date)) + 
   geom_line(aes(y=flu), colour = "red") + 
- geom_point(aes(y = visualiser_peak)) + theme_linedraw() + 
+  geom_line(aes(y = visualiser)) +
+  geom_point(aes(y = visualiser)) +
+  theme_linedraw() + 
   labs(y = "AH3")+ 
   lims(y = c(0,163))
 
@@ -233,11 +237,13 @@ fluB_epidemics[, visualiser_peak := over_peak*max(fluB_epidemics$flu)*1.1]
 
 B_EPIS <-ggplot(fluB_epidemics, aes(x = date)) + 
   geom_line(aes(y=flu), colour = "red") + 
-  geom_point(aes(y = visualiser_peak)) + theme_linedraw() + 
+  geom_line(aes(y = visualiser)) +
+  geom_point(aes(y = visualiser)) +
+  theme_linedraw() + 
   labs(y = "B")+ 
   lims(y = c(0,163))
   
-#grid.arrange(AH1_EPIS, AH3_EPIS, B_EPIS, ncol= 1)
+grid.arrange(AH1_EPIS, AH3_EPIS, B_EPIS, ncol= 1)
 
 
 
