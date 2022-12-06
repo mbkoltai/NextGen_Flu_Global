@@ -3,11 +3,6 @@
 
 # Need the INMB to be 0. 
 
-# check that the incremental is compared to number 2 not number 1
-base_scenario_to_use
-# check the threshold value
-threshold <- 20000
-
 min_vacc_cost <- function(x, sample_no, scenario_no){
   
   # remove the delivery price
