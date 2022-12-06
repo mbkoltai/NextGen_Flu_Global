@@ -1,46 +1,52 @@
 # UK model specifications
 #set the file path to the main folder <- change here and all other should be read in. 
-setwd("~/Documents/GitHub/NextGenFlu_UK/")
+setwd("~/Documents/GitHub/NextGen_Flu_Thai/")
 library(here)
 library(fluEvidenceSynthesis)
 library(tidyverse)
 
 
 ####### VARIABLES #####
-location <- "UK"
-posterior_sample_size <- 1000
-set.seed(100)
-target_scenarios <- c(1,2,3,4,5,6) # change to required
+
+###### these are for the economics and have not yet been adapted to Thailand
 base_scenario_to_use <- 2 # for the economics
 vacc_delivery_price <- 15.85#20#12#15.85 # for the economics. 
 discount_rate <- 0.035
 qaly_discount_rate <- 0.015
+threshold <- 20000
+
+# the rest
+
+location <- "Thailand"
+posterior_sample_size <- 1000
+set.seed(100887)
+target_scenarios <- c(1,2,3,4,5,6) # change to required
+
 use_presampled <- F # this is always false for UK - as only have 1000 samples of each
 save_samples <- F # this is always false for UK - as only have 1000 samples of each
-change_susceptibility_switch <- "FIXED_REDUCTION" # whether to take account reduction of infection from previous year
-name_run <- "FIXED_REDUCTION_10"
+change_susceptibility_switch <- "OFF" # whether to take account reduction of infection from previous year
+name_run <- "default"
 create_plots <- "Yes"
 
-num_parameters_posteriors <- 9
-transmisibility_location <- 5 # position in posterior of the transmissibility parameter
+num_parameters_posteriors <- 4
+transmisibility_location <- 2 # position in posterior of the transmissibility parameter
 infection_delays <- c(0.8,1.8)
-initial_infection_location <- 9
+initial_infection_location <- 4
 
-age_groups_model <- c(1, 5, 15, 25, 45, 65)
-no_risk_groups <- 2
-max_age <- 80
-num_age_groups <- 7
-end_first_year_vaccination <- as.Date("1996-09-01")
+age_groups_model <- c(2, 6, 12, 18, 60) 
+no_risk_groups <- 1
+max_age <- 73 # average life expectancy - used only for ageing out of the last compartment
+num_age_groups <- 6
+end_first_year_vaccination <- as.Date("2006-04-01")
 #THESE NEED EXTRACTING
-high_risk <- c(0.021, 0.055, 0.098, 0.087, 0.092, 0.183, 0.45)
-risk_ratios_input <- matrix(c(high_risk,0,0,0,0,0,0,0),
+risk_ratios_input <- matrix(c(0, 0, 0, 0, 0, 0, 
+                              0, 0, 0, 0, 0, 0),
                             ncol = num_age_groups , byrow = T)
-susceptibility_pattern <- c(6,6,6,7,7,7,8)
-calculate_FOI <- "No" # this should always be No for the UK (as no inter-epidemic period)
-num_years <- 13
-years <- c(1995:2010)
+susceptibility_pattern <- c(NA, 3,3,3,3,3)
+calculate_FOI <- "Yes" # this should always be No for the UK (as no inter-epidemic period)
+num_years <- 4
+years <- c(2005:2009)
 # load in the inference results from the UK
-load(here::here("UK_data","inference.results.2013.rda")) #inference.results.2013 
 contact_ids_input <- as.matrix(inference.results.2013[[1]][[1]]$contact.ids[1,])
 #THIS NEEDS EXTRACTING
 data(polymod_uk)
@@ -59,13 +65,14 @@ vaccine_scenario_names <- c("Seasonal (2013)","Seasonal (2019)","Improved (minim
 
 ##### SOURCE AND RUN ######Í
 
-# The vaccination scenario <- edit to get the required scenarios
-source(here::here("Vacc_epi_model","1_0_vaccination_scenario_list_UK.R"))
-#The list of epidemics in Kenya
-source(here::here("Vacc_epi_model","2_0_epidemics_list_UK.R"))
+# The vaccination scenario 
+source(here::here("Vacc_epi_model","1_0_vaccination_scenario_list_Thai_LSHTM.R"))
+#The list of epidemics in Thailand
+source(here::here("Vacc_epi_model","2_0_epidemics_list.R"))# needs updating from UK 
 
 # Run all the modelling!
 source(here::here("Vacc_epi_model", "0_Main_NextGen.R"))
 # Run all the economics!
+
 source(here::here("Economics", "5_0_run_economics.R"))
 
