@@ -9,10 +9,10 @@ source(here::here("Fitting","inference_function.R"))
 source(here::here("Fitting","data_for_fitting.R"))
 source(here::here("Fitting","creating_contacts.R"))
 
-epidemic_to_run <- 2
-post_size <- 5000
-thinning_steps <- 5000
-burn_in <- 100000
+epidemic_to_run <- 1
+post_size <- 10000
+thinning_steps <- 100
+burn_in <- 250000
 seed_to_use <- 70
 save <- T
 
