@@ -12,7 +12,7 @@ source(here::here("Fitting","creating_contacts.R"))
 epidemic_to_run <- 1
 post_size <- 10000
 thinning_steps <- 100
-burn_in <- 250000
+burn_in <- 500000
 seed_to_use <- 70
 save <- T
 
