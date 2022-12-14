@@ -55,14 +55,21 @@ for(scenario in target_scenarios){
             demography_input <- demography_UK[,(i+1)]
             target_coverage <-  vaccine_scenarios[[scenario]][["coverage"]][i,2:22]
          }
+         if(location == "Thailand"){
+            demography_input <- popthai[,(i+1)]
+            target_coverage <-  vaccine_scenarios[[scenario]][["coverage"]]
+         }
          # Input the relevant coverage
-         new_coverage <-  sweep(coverage_timing, 2, target_coverage, "*")
+         # Input the relevant coverage
+         new_coverage = change_coverage(matrix(rep(0,num_age_groups*3*length(dates)), 
+                                               ncol = num_age_groups*3),
+                                        target_coverage)
          # Udpate the vaccination calendar with the new inputs
          calendar_input = as_vaccination_calendar(efficacy = c(efficacy[,(i*2)-1]),
-                                            dates = as.Date(dates),
-                                            coverage = as.data.frame(new_coverage),
-                                            no_age_groups = num_age_groups,
-                                            no_risk_groups = 3)
+                                                  dates = as.Date(dates),
+                                                  coverage = as.data.frame(new_coverage),
+                                                  no_age_groups = num_age_groups,
+                                                  no_risk_groups = 3)
          year_to_run <- year(dates[1])
          
          # work out vaccination adjustments based on what proportion of 0-5s vaccinated
@@ -284,7 +291,7 @@ plot_subset$Date <- as.Date(plot_subset$Date, origin = "1970-01-01")
 tester <- tester[virus_type == "AH1N1"]
 tester2 <- dcast.data.table(tester, Vacc_scenario  + week + week_all + Date + age_group + scenario_nice ~ risk_group, 
       value.var = "total_vacc")
-tester2[, Total_vacc := Risk_group1 + Risk_group2]
+tester2[, Total_vacc := Risk_group1 ]
 tester2[,vacc_at_week := Total_vacc - shift(Total_vacc, type = "lag", n=1L), by = c("Vacc_scenario", "age_group")]
 tester2[vacc_at_week <0, vacc_at_week :=0]
 # plot the percentage of whole population administered a vaccine over the year
@@ -298,7 +305,7 @@ VACC_GIVEN_STANDARD <- ggplot(tester2[Date < as.Date("1996-09-01") & Vacc_scenar
          strip.background = element_rect(fill = "azure4"))
 
 total_vaccines[, Date := as.Date(Date, origin = "1970-01-01")]
-save(total_vaccines, file = here::here( "UK_output", paste0("Vaccine_model_output_",name_run,".Rdata")))
+save(total_vaccines, file = here::here("Vacc_epi_model", "Model_output", paste0("Vaccine_model_output_",name_run,".Rdata")))
 
 one_set <- plot_subset[virus_type == "AH1N1",]
 
@@ -325,12 +332,12 @@ one_set[ is.na(given), given := 0]
 
 one_set_c <- dcast.data.table(one_set, Vacc_scenario + Year + age_group + scenario_nice  ~ risk_group,
                            value.var = "given", fun.aggregate = sum)
-one_set_c[, Vaccinations := Risk_group1 + Risk_group2]
+one_set_c[, Vaccinations := Risk_group1]
 
 temp <- one_set
 temp_c <- dcast.data.table(temp, Vacc_scenario + season + age_group + scenario_nice  ~ risk_group,
                            value.var = "given", fun.aggregate = sum)
-temp_c[, Vaccinations := Risk_group1 + Risk_group2]
+temp_c[, Vaccinations := Risk_group1]
 
 VACCS_GIVEN <- ggplot(temp_c, aes(x = season, y =Vaccinations/1000000, fill = age_group, group = age_group)) + 
    geom_bar(stat="identity") + 

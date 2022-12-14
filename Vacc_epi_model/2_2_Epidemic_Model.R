@@ -40,7 +40,6 @@ for(epidemic in 1:length(epidemics_list)){
     posterior_subset <- posterior_samples[sample_set,2:10]
     contact_ids_input <- as.matrix(posterior_samples[sample_set,12:579])
 
-    
   } else if(location =="UK"){
     #recode flu types to the right ones
     if(flu_type == "AH3N2"){flu_type_short <- "H3"}
@@ -50,7 +49,23 @@ for(epidemic in 1:length(epidemics_list)){
     sample_set <- sample(1:nrow(posterior_samples), size=posterior_sample_size)
     posterior_subset <- as.data.frame(posterior_samples[sample_set,])
     contact_ids_input <- inference.results.2013[[year_in_question]][[flu_type_short]]$contact.ids[sample_set,]
-  } else{stop("Unknown location! SHould be Kenya or UK")}
+    
+  } else if(location == "Thailand"){
+    
+    if(flu_type == "AH3N2"){flu_type_short <- "H3"}
+    if(flu_type == "AH1N1"){flu_type_short <- "H1"}
+    if(flu_type == "B"){flu_type_short <- "B"}
+    
+read_input <-  readRDS(file = here::here("Fitting", "Fits", paste0("mcmc_",epidemic,"_to_use.Rdata")))
+ stemper <- read_input$posterior$batch   
+  
+ sample_set <- sample(1:nrow(stemper), size=posterior_sample_size)
+ posterior_subset <- as.data.frame(stemper[sample_set,])
+ contact_ids_input <- NA
+# transform the parameters
+ posterior_subset[,2] <- posterior_subset[,2] /100 
+    
+    }else{stop("Unknown location! SHould be Kenya, UK or Thailand")}
   
   posterior_subset[,"epidemic"] <- epidemic
   parameter_store[[epidemic]] <- posterior_subset
@@ -59,11 +74,11 @@ for(epidemic in 1:length(epidemics_list)){
   
   # save the ascertainment rates for later in the season
   if(flu_type == "AH3N2"){
-    ascertainment_H3 <- rbind(ascertainment_H3, data.frame(posterior_subset[,1:3], flu_type, epidemic))
+    ascertainment_H3 <- rbind(ascertainment_H3, data.frame(posterior_subset[,1], flu_type, epidemic))
   } else if(flu_type == "AH1N1"){
-    ascertainment_H1 <- rbind(ascertainment_H1, data.frame(posterior_subset[,1:3], flu_type, epidemic))
+    ascertainment_H1 <- rbind(ascertainment_H1, data.frame(posterior_subset[,1], flu_type, epidemic))
   } else if(flu_type == "B"){
-    ascertainment_B <- rbind(ascertainment_B, data.frame(posterior_subset[,1:3], flu_type, epidemic))
+    ascertainment_B <- rbind(ascertainment_B, data.frame(posterior_subset[,1], flu_type, epidemic))
   } else {stop("NOT A VAILD FLU TYPE")}
   
   #by scenario
@@ -190,7 +205,7 @@ total_cases_time_temp$Year <- as.character(total_cases_time_temp$Year)
 total_cases_time_temp$Virus <- as.character(total_cases_time_temp$Virus)
 
 total_cases_time_temp$scenario <- factor(total_cases_time_temp$scenario,
-                                         levels=c("1", "2", "3", "4", "5", "6"))
+                                         levels=as.character(target_scenarios))
 
 total_cases_time_temp <- as.data.frame(total_cases_time_temp)
 
@@ -200,29 +215,30 @@ total_cases_time_temp <- data.table(total_cases_time_temp)
 # 
 ghm<- total_cases_time_temp[]
 
+plot_epi <- 3
+
 total_cases_time_temp <- data.frame(total_cases_time_temp)
 ghm$sample <- as.factor(ghm$sample)
 ghm$scenario <- as.factor(ghm$scenario)
 ghm$epidemic <- as.factor(ghm$epidemic)
 ghm <- as.data.table(ghm)
-ghml <- ghm[epidemic==25]
+ghml <- ghm[epidemic==plot_epi]
 ghm_m <- melt.data.table(ghml, id.vars = c("sample",  "epidemic", "scenario", "Date",
                                "Virus"), measure.vars = c(columns_to_sum))
   #ghm_m <- ghm_m[sample %in% set_of_sampels]
 
 for_vaccination <- dcast.data.table(ghm_m, sample + epidemic + scenario + Date + Virus ~ variable,
                          value.var = "value")
-for_vaccination[, Age1 := X1 + X8 + X15]
-for_vaccination[, Age2 := X2 + X9 + X16]
-for_vaccination[, Age3 := X3 + X10 + X17]
-for_vaccination[, Age4 := X4 + X11 + X18]
-for_vaccination[, Age5 := X5 + X12 + X19]
-for_vaccination[, Age6 := X6 + X13 + X20]
-for_vaccination[, Age7 := X7 + X14 + X21]
+for_vaccination[, Age1 := X1 + X7 + X13]
+for_vaccination[, Age2 := X2 + X8 + X14]
+for_vaccination[, Age3 := X3 + X9 + X15]
+for_vaccination[, Age4 := X4 + X10 + X16]
+for_vaccination[, Age5 := X5 + X11 + X17]
+for_vaccination[, Age6 := X6 + X12 + X18]
+
 for_vaccination[, c("X1", "X2", "X3", "X4", "X5", "X6", 
                     "X7", "X8", "X9", "X10", "X11", "X12", 
-                    "X13", "X14", "X15", "X16", "X17", "X18", 
-                    "X19", "X20", "X21") := NULL]
+                    "X13", "X14", "X15", "X16", "X17", "X18") := NULL]
 
 for_vaccination_m <- melt.data.table(for_vaccination, id.vars = c("sample", "epidemic", "scenario", 
                                                "Date", "Virus"))
@@ -234,7 +250,7 @@ ggplot(for_vaccination_m[scenario==1],aes(x = Date, y = value,
   geom_path(alpha = 0.5) +
   facet_grid(variable~scenario, scales = "free_y") +
   theme_linedraw() +
-  labs(x = "Date", y = "Total cases", title = paste0("1995 H3N2")) +
+  labs(x = "Date", y = "Total cases", title = paste0("Epidemic ",plot_epi )) +
   theme(axis.title = element_text(size = 12),
         axis.text = element_text(size = 12)) +
   geom_vline(xintercept = as.Date("2013-12-12"), alpha = 0.4)

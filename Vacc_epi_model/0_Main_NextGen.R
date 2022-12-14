@@ -13,6 +13,10 @@ library(ISOweek)
 library(qs)
 library(gridExtra)
 library(grid)
+if("tictoc" %in% (.packages())){
+  detach("package:tictoc", unload=TRUE) 
+}
+
 ###### VACCINATION MODEL ######
 # the vaccination list will have been loaded from the specifications sheet
 

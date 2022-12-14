@@ -2,9 +2,13 @@ library(fluEvidenceSynthesis)
 library(ggplot2)
 
 # sepcify how many samples to take for spaghetti plots
-n_samples <- 100
+n_samples <- 10
 # can use this to load one
-#load(file = here::here("Fitting", "Fits", "mcmc_1_1000_2022-11-28 13:41:41 GMT"))
+epidemic <- epidemic_to_run
+if(epidemic_to_run >6){
+  epidemic_no = epidemic_to_run-6
+}
+#output_list <-  readRDS(file = here::here("Fitting", "Fits", paste0("mcmc_",epidemic,"_to_use.Rdata")))
 
 colnames(output_list$posterior$batch) <- c("reporting", "transmissibility", "sus1",
                                        "infected", "blank", "blank")
@@ -34,7 +38,7 @@ TRACE_THINNED
 # has todo with loading the correct inputs for the ODE model
 ode.results <- function( pars, input_demography = pop_by_age ) 
 {
-
+  
   age.group.limits <- c(2,6,12,18,60)
  
   contacts <- fluEvidenceSynthesis::contact_matrix(as.matrix(polymod.thai),
@@ -44,26 +48,42 @@ ode.results <- function( pars, input_demography = pop_by_age )
   # Ppulation size initially infected by age and risk group
   initial.infected <- rep( 10^pars[4], 6 ) 
 
+  dates_to_run <- c(epidemics_to_fit[[epidemic_to_run]]$start,epidemics_to_fit[[epidemic_to_run]]$end)
+  
+  vaccine_calendar <- as_vaccination_calendar(efficacy = c(0,0,0,0,0,0), 
+                                              dates = dates_to_run,
+                                              coverage = matrix(0, nrow = 3,#length(dates_to_run), 
+                                                                ncol = 6), 
+                                              no_age_groups = 6, no_risk_groups = 1)
+  prop_vacc_start <- list(prop_vaccine_compartments = rep(0,18),
+                          prop_R_vaccinated =rep(0,18), 
+                          prop_R = rep(0,18))
   # Run simulation
   # Note that to reduce complexity 
   # by using the same susceptibility parameter for multiple age groups
-  odes <- infectionODEs(
-    population = age.groups,
-    vaccine_calendar = vaccine_calendar,
-    contact_matrix = contacts,
-    susceptibility = c(1, pars[3], pars[3],
-                       pars[3], pars[3], pars[3]),
-    transmissibility = pars[2]/100, 
-    infection_delays = c(0.8,1.8),
-    initial_infected = initial.infected,
-    interval = 7)
+  pars[2] <- pars[2]/100
+  odes2 <- incidence_function_fit(demography_input =popthai[,epidemic_no+1], 
+                                   parameters = pars,
+                                   calendar_input= vaccine_calendar,
+                                   contact_ids_sample = as.matrix(polymod.thai),
+                                   waning_rate = 0,
+                                   vaccination_ratio_input = prop_vacc_start,
+                                   begin_date = dates_to_run[1], 
+                                   end_date = dates_to_run[2] ,  
+                                   year_to_run = year(dates_to_run[1]), 
+                                   efficacy_now =rep(0,18) , 
+                                   efficacy_next=rep(0,18) ,
+                                   efficacy_next2 =rep(0,18), 
+                                   previous_summary =NA, 
+                                  age_groups_model = age.group.limits)
+  
+
 
   # For simplicity we sum the low and high risk group
-
-  odes <- data.table(odes)
+  odes <- data.table(odes2)
   # Ignore times row
-  odes[,Month := month(Time)]
-  odes[,Time := NULL]
+  odes[,Month := month(as.Date(as.character(time)))]
+  odes[,time := NULL]
   odes[, lapply(.SD, sum, na.rm=TRUE), by="Month" ]
   monthly_cases <-  odes[, sum(.SD, na.rm=TRUE), by="Month" ]
 
@@ -101,3 +121,4 @@ ggplot(data = data_fitted) +
   geom_point(data = data_fitted,aes(x = timestep, y = V1))
 
 # c(-7, 0.07, 0.9, 0.9, 0.9, 0.4)# gives an outbreak
+

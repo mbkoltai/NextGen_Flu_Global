@@ -15,43 +15,43 @@ incidence_function_2 <- function(demography_input,
                                previous_summary ) {
   
 
-
-  contacts_matrixformat <- contact_matrix(as.matrix(relevant_polymod[contact_ids_sample,]),
-                                          demography_input, age_groups_model)
+  contacts_matrixformat <- fluEvidenceSynthesis::contact_matrix(as.matrix(relevant_polymod),
+                                                   demography_input, age_groups_model ) 
   
   age_group_sizes <- stratify_by_age(demography_input, age_groups_model)
   
   population_stratified <- stratify_by_risk(age_group_sizes, risk_ratios_input)
 
   initial_infected <- rep(10^parameters[initial_infection_location], num_age_groups)
+
   initial_infected <- stratify_by_risk(initial_infected, risk_ratios_input)
   
   susceptibility <- rep(1,num_age_groups)
   
-  for(sus_i in 1:num_age_groups){
+  for(sus_i in 2:num_age_groups){
     susceptibility[sus_i] <-  parameters[susceptibility_pattern[sus_i]]
   }
-
-
-  infectionODEs_epidemic_yearcross(population_stratified = population_stratified, 
-                                   initial_infected = initial_infected, 
+    infectionODEs_epidemic_yearcross(population_stratified = population_stratified,
+                                   initial_infected = initial_infected,
                                    calendar_input = calendar_input,
                                    contacts_matrixformat,
-                                   susceptibility = susceptibility, 
+                                   susceptibility = susceptibility,
                                    transmissibility = parameters[transmisibility_location],
-                                   infection_delays = infection_delays, interval = 1,
+                                   infection_delays = infection_delays, interval = 7,
                                    waning_rate = waning_rate,
                                    initial_vaccinated_prop = unlist(vaccination_ratio_input[[1]]),
                                    initial_Rv_prop = unlist(vaccination_ratio_input[[2]]),
-                                   initial_R_prop = unlist(vaccination_ratio_input[[3]]), 
-                                   begin_date = begin_date, 
-                                   end_date = end_date,  
-                                   year_to_run = year_to_run, 
-                                   efficacy_now = efficacy_now, 
+                                   initial_R_prop = unlist(vaccination_ratio_input[[3]]),
+                                   begin_date = begin_date,
+                                   end_date = end_date,
+                                   year_to_run = year_to_run,
+                                   efficacy_now = efficacy_now,
                                    efficacy_next = efficacy_next,
-                                   efficacy_next2 = efficacy_next2, 
+                                   efficacy_next2 = efficacy_next2,
                                    previous_summary = previous_summary
   )
+  
+  
   
   
 }
@@ -133,7 +133,7 @@ infectionODEs_epidemic_yearcross <- function(population_stratified,
   
   if(change_susceptibility_switch == "FIXED_REDUCTION" & 
      reduce_susceptibility == T){
-    susceptibility = susceptibility*1.1
+    susceptibility = susceptibility*1.2
   }
   # alter the exxesive calues to be within reasn
   susceptibility[which(is.na(susceptibility))] <- 0
@@ -177,6 +177,7 @@ infectionODEs_epidemic_yearcross <- function(population_stratified,
 
   # extract the relevant dates from the calendar (i.e. exclude those before start time)
   #Update the vaccination calendar
+
   keepers <- which(calendar_input$dates>= begin_date )
   calendar_input$dates <- calendar_input$dates[keepers] 
   
@@ -684,39 +685,63 @@ run_epidemic_model_yearcross <- function(vaccine_scenarios, year_in_question, be
   #specify the relevant vaccination parameters
   
   waning_rate = vaccine_scenarios[[scenario]][["waning_rate"]]
-  
+
   # vaccine calendar - either between the specified dates or over the whole years
+
   if(length(vaccine_scenarios[[scenario]][["dates"]])>1){
     # check whether looping over a year
-    if(as.Date(paste0(years[i], vaccine_scenarios[[scenario]][["dates"]][1])) >
-       as.Date(paste0(years[i], vaccine_scenarios[[scenario]][["dates"]][2]))){
-      dates = seq(from = as.Date(paste0(years[i], vaccine_scenarios[[scenario]][["dates"]][1])),
-                  to = as.Date(paste0(years[i]+1, vaccine_scenarios[[scenario]][["dates"]][2])),
+    if(as.Date(paste0(years[year_in_question], vaccine_scenarios[[scenario]][["dates"]][1])) >
+       as.Date(paste0(years[year_in_question], vaccine_scenarios[[scenario]][["dates"]][2]))){
+      dates = seq(from = as.Date(paste0(years[year_in_question], vaccine_scenarios[[scenario]][["dates"]][1])),
+                  to = as.Date(paste0(years[year_in_question]+1, vaccine_scenarios[[scenario]][["dates"]][2])),
                   by = 7)
     } else{ 
-      dates = seq(from = as.Date(paste0(years[i], vaccine_scenarios[[scenario]][["dates"]][1])),
-                  to = as.Date(paste0(years[i], vaccine_scenarios[[scenario]][["dates"]][2])),
+      dates = seq(from = as.Date(paste0(years[year_in_question], vaccine_scenarios[[scenario]][["dates"]][1])),
+                  to = as.Date(paste0(years[year_in_question], vaccine_scenarios[[scenario]][["dates"]][2])),
                   by = 7)  }
   } else {
-    dates = seq(from = as.Date(paste0(years[i], vaccine_scenarios[[scenario]][["dates"]][1])),
-                to = as.Date(paste0(years[i+1], vaccine_scenarios[[scenario]][["dates"]][1]))-1,
+    dates = seq(from = as.Date(paste0(years[year_in_question], vaccine_scenarios[[scenario]][["dates"]][1])),
+                to = as.Date(paste0(years[year_in_question+1], vaccine_scenarios[[scenario]][["dates"]][1]))-1,
                 by = 7)}
   # Coverage
   
-  if(location == "Kenya"){
+  if(location == "Kenya" | location == "Thailand"){
     target_coverage <-  vaccine_scenarios[[scenario]][["coverage"]]
   }
   if(location == "UK"){
     target_coverage <-  vaccine_scenarios[[scenario]][["coverage"]][i,2:22]
   }
 
-  # new_coverage = change_coverage(matrix(rep(0,num_age_groups*3*length(dates)), 
-  #                                       ncol = num_age_groups*3),
-  #                                target_coverage)
-  new_coverage <-  sweep(coverage_timing, 2, target_coverage, "*")
+  # Input the relevant coverage
+  new_coverage = change_coverage(matrix(rep(0,num_age_groups*3*length(dates)), 
+                                        ncol = num_age_groups*3),
+                                 target_coverage)
   # specify the demography
   if(location == "Kenya"){
     demography_input <- popken[,which(years == epidemics_list[[epidemic]]["year"])+1]}
+  # calculate the vaccination calender
+  # determine the right efficacy to use here 
+  starting_year <- year(begin_date)
+  if(begin_date < as.Date(paste0(starting_year,"-03-01"))) {
+    # required efficacy = previous year NH
+    required_efficacy <- grep(starting_year-1, x = lookup_year)
+    required_efficacy2 <- grep("NH", x = lookup_year[required_efficacy])
+    efficacy_now_spot <-required_efficacy[required_efficacy2]
+  } else if(begin_date >= as.Date(paste0(starting_year,"-03-01")) &
+            begin_date < as.Date(paste0(starting_year,"-09-01"))) {
+    # required efficacy = curent year SH
+    required_efficacy <- grep(starting_year, x = lookup_year)
+    required_efficacy2 <- grep("SH", x = lookup_year[required_efficacy])
+    efficacy_now_spot <-required_efficacy[required_efficacy2]
+  } else if(begin_date >= as.Date(paste0(starting_year,"-09-01"))){
+    # required efficacy = current year NH
+    required_efficacy <- grep(starting_year, x = lookup_year)
+    required_efficacy2 <- grep("NH", x = lookup_year[required_efficacy])
+    efficacy_now_spot <-required_efficacy[required_efficacy2]
+  }
+  
+  if(location == "Thailand"){
+    demography_input <- popthai[,which(years == epidemics_list[[epidemic]]["year"])+1]}
   # calculate the vaccination calender
   # determine the right efficacy to use here 
   starting_year <- year(begin_date)
@@ -751,6 +776,7 @@ run_epidemic_model_yearcross <- function(vaccine_scenarios, year_in_question, be
     efficacy_next <- vaccine_scenarios[[scenario]][["efficacy_B"]][,efficacy_now_spot+1]
     efficacy_next2 <- vaccine_scenarios[[scenario]][["efficacy_B"]][,efficacy_now_spot+2]
   }
+
   calendar_input = as_vaccination_calendar(efficacy = rep(0,3*num_age_groups)
                                            , dates = as.Date(dates) 
                                            , coverage = as.data.frame(new_coverage)

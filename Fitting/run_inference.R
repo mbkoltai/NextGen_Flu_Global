@@ -1,22 +1,33 @@
 library(fluEvidenceSynthesis)
 library(beepr)
+library(tictoc)
 # The custom inference function. In this example the custom inference function 
 # performs exactly the same inference as the original C++ function (above). 
 # It is up to the user to change this in a way that works for their analysis.
-
-source(here::here("Fitting","epidemics.R"))
-source(here::here("Fitting","inference_function.R"))
 source(here::here("Fitting","data_for_fitting.R"))
+source(here::here("Fitting","epidemics.R"))
+source(here::here("Vacc_epi_model","2_0_epidemics_list_Thai.R"))
+epidemics_list[7:12] <- epidemics_list[1:6] 
+source(here::here("Vacc_epi_model","2_1b_model_epidemic_yearcross.R"))
+source(here::here("Fitting","inference_function.R"))
 source(here::here("Fitting","creating_contacts.R"))
+infection_delays <- c(0.8,1.8)
+high_risk <- rep(0,6)
+risk_ratios_input <- matrix(c(high_risk,0,0,0,0,0,0),
+                            ncol = 6 , byrow = T)
 
 epidemic_to_run <- 12
-post_size <- 100#10000
-thinning_steps <- 10#100
-burn_in <- 100#500000
-seed_to_use <- 70
+post_size <- 10
+thinning_steps <- 10
+burn_in <- 100
+seed_to_use <- 55
 save <- T
-
+tic()
 set.seed(seed_to_use)
+
+if(epidemic_to_run >6){
+  epidemic_no = epidemic_to_run-6
+}
 
 dates_to_run <- c(epidemics_to_fit[[epidemic_to_run]]$start,epidemics_to_fit[[epidemic_to_run]]$end)
 
@@ -62,7 +73,7 @@ saveRDS(output_list, file = here::here("Fitting", "Fits",
                                         paste0("mcmc_", epidemic_to_run,
                                                "_", post_size, "_", Sys.time(),".Rdata")))
 }
-
+toc()
 beep(4)
 
 

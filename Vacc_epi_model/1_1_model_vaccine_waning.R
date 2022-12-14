@@ -253,8 +253,9 @@ incidence_function <- function(demography_input,
   
   time_column = "Time"
   # create the contact matrix
-  contacts_matrixformat <- contact_matrix(as.matrix(relevant_polymod),
-                             demography_input, age_groups_model)
+
+  contacts_matrixformat <- fluEvidenceSynthesis::contact_matrix(as.matrix(relevant_polymod),
+                                                   demography_input, age_groups_model ) 
 
   age_group_sizes <- stratify_by_age(demography_input, age_groups_model)
   population_stratified <- stratify_by_risk(age_group_sizes, risk_ratios_input)

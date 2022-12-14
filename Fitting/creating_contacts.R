@@ -107,7 +107,8 @@ popthai <- data.frame(X = 1:61,
                       X2006 = popthai.split,
                       X2007 = popthai.split,
                       X2008 = popthai.split,
-                      X2009 = popthai.split
+                      X2009 = popthai.split,
+                      X2010 = popthai.split
 )
 
 rm(popthai.to.use, popthai.split)
