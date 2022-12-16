@@ -1,6 +1,10 @@
 library(fluEvidenceSynthesis)
 library(rriskDistributions)
 library(data.table)
+library(socialmixr)
+library(ggplot2)
+library(gridExtra)
+library(wpp2019)
 library(beepr)
 library(tictoc)
 # The custom inference function. In this example the custom inference function 

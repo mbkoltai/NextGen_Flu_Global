@@ -1,8 +1,4 @@
-library(socialmixr)
-library(data.table)
-library(ggplot2)
-library(gridExtra)
-library(wpp2019)
+
 
 ##### Load in all the data #####
 # Data from Ben's github repo https://github.com/BenSCooper/fluvaxmod/
@@ -12,9 +8,7 @@ data <- list()
 # https://github.com/BenSCooper/fluvaxmod/blob/189e0ea7b01fbb61307d1e4d6211b3bd133e2b10/data%202005to6%20%20in%20multinomial%20format%206%20age%20groups.txt
 data[["2005to2006"]] <- list(
   Numtestedbymonth=c(38,84,142,192,264,226,109,139,165,196,146,194),
-  fluAH1posbymonth=c(0,0,0,0,1,0,3,2,3,0,1,3),
-  fluAH3posbymonth=c(4,29,47,36,24,22,1,1,1,0,0,0),
-  fluBposbymonth=c(1,0,5,6,18,14,13,15,21,26,17,5),
+  fluAH1posbymonth=c(0,0,0,0,1,0,3,2,3,0,1,3),  fluBposbymonth=c(1,0,5,6,18,14,13,15,21,26,17,5),
   ILIbyage=matrix(
     c(48,63,67,84,650,121,78,100,161,137,849,138,131,276,274,246,1280,206,142,236,213,189,1119,233,141,177,209,165,1120,194,84,163,218,172,1063,177,76,123,140,141,1080,211,101,145,173,134,1143,175,55,114,114,86,713,151,95,155,158,89,882,204,49,84,99,59,609,152,69,82,76,49,547,115),
     nrow=6, ncol=12
@@ -243,7 +237,7 @@ B_EPIS <-ggplot(fluB_epidemics, aes(x = date)) +
   labs(y = "B")+ 
   lims(y = c(0,163))
   
-grid.arrange(AH1_EPIS, AH3_EPIS, B_EPIS, ncol= 1)
+#grid.arrange(AH1_EPIS, AH3_EPIS, B_EPIS, ncol= 1)
 
 
 

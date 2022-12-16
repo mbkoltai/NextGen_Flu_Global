@@ -12,9 +12,9 @@ limits_tester <- limits-1
 r0_gamma_pars <- get.gamma.par(p = c(0.025, 0.975), q = limits_tester, 
                                show.output = F, plot = F)
 
-x <- c(1:100)
-y <- rgamma(n=100, shape = r0_gamma_pars[1], rate = r0_gamma_pars[2])
-plot(x, y)
+# x <- c(1:100)
+# y <- rgamma(n=100, shape = r0_gamma_pars[1], rate = r0_gamma_pars[2])
+# #plot(x, y)
 
 
 # sucsceptibility, from Bens paper. 
@@ -28,7 +28,7 @@ sus_beta_pars <- get.beta.par(p = c(0.025, 0.5, 0.975),
                               show.output = F, 
                               plot = F)
 
-x <- c(1:1000)
-y <- rbeta(n=1000, shape1 = sus_beta_pars[1], shape2 = sus_beta_pars[2])
-plot(x, y)
+# x <- c(1:1000)
+# y <- rbeta(n=1000, shape1 = sus_beta_pars[1], shape2 = sus_beta_pars[2])
+# plot(x, y)
 
