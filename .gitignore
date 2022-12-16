@@ -4,8 +4,14 @@
 
 # folder
 Fitting/Fits/
+Vacc_epi_model/Model_output/
+
+# plots
+*.tiff
 
 # Session Data files
+.DS_Store
+*.DS_Store
 .RData
 
 
