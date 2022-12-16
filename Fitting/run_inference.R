@@ -1,3 +1,5 @@
+###### packages ######
+
 library(fluEvidenceSynthesis)
 library(rriskDistributions)
 library(data.table)
@@ -7,9 +9,19 @@ library(gridExtra)
 library(wpp2019)
 library(beepr)
 library(tictoc)
-# The custom inference function. In this example the custom inference function 
-# performs exactly the same inference as the original C++ function (above). 
-# It is up to the user to change this in a way that works for their analysis.
+
+
+###### things to specify #####
+
+epidemic_to_run <- 1
+post_size <- 1000
+thinning_steps <- 100
+burn_in <- 100
+seed_to_use <- 55
+save <- T
+
+
+#### loading in all the neccesary things #####
 source(here::here("Fitting","data_for_fitting.R"))
 source(here::here("Fitting","epidemics.R"))
 source(here::here("Vacc_epi_model","2_0_epidemics_list_Thai.R"))
@@ -24,15 +36,6 @@ risk_ratios_input <- matrix(c(high_risk,0,0,0,0,0,0),
                             ncol = 6 , byrow = T)
 contacts_matrixformat <- fluEvidenceSynthesis::contact_matrix(as.matrix(polymod.thai),
                                                               popthai[,2], c(2, 6, 12, 18, 60)  )
-
-epidemic_to_run <- 1
-post_size <- 10
-thinning_steps <- 10
-burn_in <- 100
-seed_to_use <- 55
-save <- T
-tic()
-set.seed(seed_to_use)
 
 if(epidemic_to_run >6){
   epidemic_no = epidemic_to_run-6
@@ -52,6 +55,12 @@ names(initial_parameters) <- c("reporting", "transmissibility",
                                "susceptibility",
                                "initial_infected")
 # ninitial infected to the  power of, reporting is on log scale
+
+
+##### Run the fit #####
+
+tic()
+set.seed(seed_to_use)
 
 
 output <- custom_inference(input_demography = pop_by_age, 
