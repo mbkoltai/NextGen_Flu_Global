@@ -62,7 +62,7 @@ ode.results <- function( pars, input_demography = pop_by_age )
   # Note that to reduce complexity 
   # by using the same susceptibility parameter for multiple age groups
   pars[2] <- pars[2]/100
-  odes2 <- incidence_function_fit(demography_input =popthai[,epidemic_no+1], 
+  odes2 <- incidence_function_fit(demography_input =popthai[,2], 
                                    parameters = pars,
                                    calendar_input= vaccine_calendar,
                                    contact_ids_sample = as.matrix(polymod.thai),
@@ -116,9 +116,6 @@ print(
     labs(title = paste0("Epidemic ", epidemic_to_run))
   )
 
-
-ggplot(data = data_fitted) + 
-  geom_point(data = data_fitted,aes(x = timestep, y = V1))
 
 # c(-7, 0.07, 0.9, 0.9, 0.9, 0.4)# gives an outbreak
 
