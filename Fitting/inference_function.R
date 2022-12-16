@@ -39,7 +39,7 @@ custom_inference <- function(input_demography, vaccine_calendar, input_polymod, 
 
     # we are using the same susceptibility parameter for multiple age groups
 
-    odes <- incidence_function_fit(demography_input =popthai[,epidemic_no +1], 
+    odes <- incidence_function_fit(demography_input =popthai[,1], 
                                  parameters = pars,
                                  calendar_input= vaccine_calendar,
                                  contact_ids_sample = as.matrix(polymod.thai),
