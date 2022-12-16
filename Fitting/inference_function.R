@@ -75,15 +75,27 @@ custom_inference <- function(input_demography, vaccine_calendar, input_polymod, 
   }
   llprior <- function(pars) {
  
-    if (pars[c(2)] < 0 || any(pars[c(3)] > 1) ||  any(pars[c(3)] < 0.25)
-        || pars[4] < log(0.00001) || pars[4] > 29.5 ) # 29.5 as 0.01% of population
-      return(-Inf)
-    lprob <- 0
-    c(-10.5, 10, 0.7, 1, 0, 0)
-    # lprob <- dnorm(pars[5], 0.1653183, 0.02773053, 1)
-    # lprob <- lprob + dlnorm(pars[1], -4.493789, 0.2860455, 1)
-    # lprob <- lprob + dlnorm(pars[2], -4.117028, 0.4751615, 1)
-    # lprob <- lprob + dlnorm(pars[3], -2.977965, 1.331832, 1)
+    # 1 is reported 
+    # 2 is transmission
+    # 3 is susceptibility
+    # 4 is initinal start
+    if (exp(pars[1]) < 0 || pars[4] < log(0.00001) || pars[4] > 29.5 ){ # 29.5 as 0.01% of population
+      return(-Inf)}
+    
+ lprob <- 0
+ # prior on the R0 
+ R0 <- fluEvidenceSynthesis::as_R0(transmission_rate = pars[2]/100,
+                             contact_matrix =contacts_matrixformat, 
+                             age_groups = stratify_by_age(popthai[,2], limits = 
+                                                            age.group.limits))
+ lprob <- lprob + dgamma(R0-1, shape = r0_gamma_pars[1], 
+                         rate =r0_gamma_pars[2], log = T)
+ lprob <- lprob + dbeta(pars[3], shape1 = sus_beta_pars[1], 
+                        shape2 = sus_beta_pars[2], log = T)
+ 
+ # prior on susceptiblity
+
+ 
     
     return(lprob)
   }
@@ -183,9 +195,7 @@ incidence_function_fit <- function(demography_input,
                                  efficacy_next ,
                                  efficacy_next2 , 
                                  previous_summary, 
-                                 age_groups_model ){
-  contacts_matrixformat <- fluEvidenceSynthesis::contact_matrix(as.matrix(polymod.thai),
-                                                                demography_input, age_groups_model ) 
+                                 age_groups_model){
   
   age_group_sizes <- stratify_by_age(demography_input, age_groups_model)
 

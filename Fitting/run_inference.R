@@ -1,4 +1,6 @@
 library(fluEvidenceSynthesis)
+library(rriskDistributions)
+library(data.table)
 library(beepr)
 library(tictoc)
 # The custom inference function. In this example the custom inference function 
@@ -11,12 +13,15 @@ epidemics_list[7:12] <- epidemics_list[1:6]
 source(here::here("Vacc_epi_model","2_1b_model_epidemic_yearcross.R"))
 source(here::here("Fitting","inference_function.R"))
 source(here::here("Fitting","creating_contacts.R"))
+source(here::here("Fitting","prior_distribution_specification.R"))
 infection_delays <- c(0.8,1.8)
 high_risk <- rep(0,6)
 risk_ratios_input <- matrix(c(high_risk,0,0,0,0,0,0),
                             ncol = 6 , byrow = T)
+contacts_matrixformat <- fluEvidenceSynthesis::contact_matrix(as.matrix(polymod.thai),
+                                                              popthai[,2], c(2, 6, 12, 18, 60)  )
 
-epidemic_to_run <- 12
+epidemic_to_run <- 1
 post_size <- 10
 thinning_steps <- 10
 burn_in <- 100
