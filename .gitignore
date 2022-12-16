@@ -2,8 +2,12 @@
 .Rhistory
 .Rapp.history
 
+# folder
+Fitting/Fits/
+
 # Session Data files
 .RData
+
 
 # User-specific files
 .Ruserdata
