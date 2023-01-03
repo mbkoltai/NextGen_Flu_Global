@@ -28,10 +28,8 @@ if(base_scenario_to_use >1 ){
   inflater <- 1
 } 
 ####### Annual outcomes ######
-
-# sum across years 
-total_cases_time[, c("week", "epidemic","total_cases", "scenario_nice", "Date", 
-                     "X15", "X16", "X17", "X18", "X19", "X20", "X21") := NULL]
+total_cases_time <- total_infections_all
+total_cases_time[, Date := NULL]
 cases_sample_year <- total_cases_time[, lapply(.SD, sum, na.rm=T), by = c("sample", "scenario", "Year", 
                                                                           "Virus")]
 # combine age groups 15-25 and 25-44 as they're one in the cromer data

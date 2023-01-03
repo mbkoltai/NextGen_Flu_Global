@@ -13,7 +13,7 @@ library(tictoc)
 
 ###### things to specify #####
 
-epidemic_to_run <- 1
+epidemic_to_run <- 2
 post_size <- 10000
 thinning_steps <- 100
 burn_in <- 100000

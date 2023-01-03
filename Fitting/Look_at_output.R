@@ -1,7 +1,7 @@
 library(fluEvidenceSynthesis)
 library(ggplot2)
 
-# sepcify how many samples to take for spaghetti plots
+# sepcify how many samples to take for spaghetti plot
 n_samples <- 100
 # can use this to load one
 epidemic <- epidemic_to_run
