@@ -4,6 +4,21 @@ setwd("~/Documents/GitHub/NextGen_Flu_Thai/")
 library(here)
 library(fluEvidenceSynthesis)
 library(tidyverse)
+library(data.table)
+library(MASS)
+library(ggplot2)
+library(fluEvidenceSynthesis)
+library(plyr)
+library(reshape2)
+library(ISOweek)
+library(qs)
+library(gridExtra)
+library(grid)
+library(wpp2019)
+if("tictoc" %in% (.packages())){
+  detach("package:tictoc", unload=TRUE) 
+}
+
 
 
 ####### VARIABLES #####
