@@ -28,7 +28,7 @@ overall_store[variable == "rel_sus_4", variable := "X4"]
 overall_store[variable == "rel_sus_5", variable := "X5"]
 overall_store[variable == "rel_sus_6", variable := "X6"]
 
-overall_store$scenario <- as.factor(overall_store$scenario)
+#overall_store$scenario <- as.factor(overall_store$scenario)
 
 overall_store[total_cases_to_join, on = c("Date", "scenario", "virus_type", "sample", "variable"), epidemic_cases := i.total_cases]
 overall_store[is.na(epidemic_cases), epidemic_cases := 0]
