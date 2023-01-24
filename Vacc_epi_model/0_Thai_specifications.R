@@ -15,6 +15,7 @@ library(qs)
 library(gridExtra)
 library(grid)
 library(wpp2019)
+# this overrides a needed function  
 if("tictoc" %in% (.packages())){
   detach("package:tictoc", unload=TRUE) 
 }
@@ -35,7 +36,7 @@ threshold <- 20000
 location <- "Thailand"
 posterior_sample_size <- 10
 set.seed(100887)
-target_scenarios <- c(1,4,28,53,75,122) # change to required
+target_scenarios <- c(1,4,28,53,75,142) # change to required
 
 use_presampled <- F # this is always false for UK - as only have 1000 samples of each
 save_samples <- F # this is always false for UK - as only have 1000 samples of each
@@ -52,7 +53,7 @@ age_groups_model <- c(2, 6, 12, 18, 60)
 no_risk_groups <- 1
 max_age <- 77 # average life expectancy - used only for ageing out of the last compartment
 num_age_groups <- 6
-end_first_year_vaccination <- as.Date("2006-04-01") #CHANGE
+end_first_year_vaccination <- as.Date("2006-04-01") 
 high_risk <- rep(0,6)
 risk_ratios_input <- matrix(c(high_risk,0,0,0,0,0,0),
                             ncol = num_age_groups , byrow = T)
@@ -75,6 +76,9 @@ risk_group_labels <- data.frame(id =c(1:18),
                                rep("Risk_group3",num_age_groups)))
 vaccine_scenario_names <- c("No vaccine","Current seasonal","Improved (minimal)","Improved (efficacy)","Improved (breadth)",
 "Universal")
+set.seed(5042)
+input_contacts_fixed <- fluEvidenceSynthesis::contact_matrix(as.matrix(relevant_polymod),
+                                     demography_input, age_groups_model )
 
 
 ##### SOURCE AND RUN ######Í

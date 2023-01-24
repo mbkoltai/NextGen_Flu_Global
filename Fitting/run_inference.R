@@ -34,6 +34,7 @@ infection_delays <- c(0.8,1.8)
 high_risk <- rep(0,6)
 risk_ratios_input <- matrix(c(high_risk,0,0,0,0,0,0),
                             ncol = 6 , byrow = T)
+set.seed(5042)
 contacts_matrixformat <- fluEvidenceSynthesis::contact_matrix(as.matrix(polymod.thai),
                                                               popthai[,2], c(2, 6, 12, 18, 60)  )
 

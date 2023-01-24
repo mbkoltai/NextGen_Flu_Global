@@ -8,7 +8,7 @@ epidemic <- epidemic_to_run
 if(epidemic_to_run >6){
   epidemic_no = epidemic_to_run-6
 }
-#output_list <-  readRDS(file = here::here("Fitting", "Fits", paste0("mcmc_",epidemic,"_to_use.Rdata")))
+output_list <-  readRDS(file = here::here("Fitting", "Fits", paste0("mcmc_",epidemic,"_to_use.Rdata")))
 
 colnames(output_list$posterior$batch) <- c("reporting", "transmissibility", "sus1",
                                        "infected", "blank", "blank")

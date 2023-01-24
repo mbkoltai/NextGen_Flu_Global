@@ -242,13 +242,13 @@ for_vaccination[, c("X1", "X2", "X3", "X4", "X5", "X6",
 
 for_vaccination_m <- melt.data.table(for_vaccination, id.vars = c("sample", "epidemic", "scenario", 
                                                "Date", "Virus"))
-
-
-ggplot(for_vaccination_m[scenario==1],aes(x = Date, y = value,
+for_vaccination_m <- as.data.frame(for_vaccination_m[scenario %in% c(1,4) & sample %in% c(5)])
+for_vaccination_m$scenario <- as.factor(for_vaccination_m$scenario)
+ggplot(for_vaccination_m, aes(x = Date, y = value,
                                  colour = scenario,
-                                 group =sample)) +
-  geom_path(alpha = 0.5) +
-  facet_grid(variable~scenario, scales = "free_y") +
+                                 group = interaction(sample, variable, scenario))) +
+  geom_line(alpha = 0.5) +
+  facet_grid(variable~., scales = "free_y") +
   theme_linedraw() +
   labs(x = "Date", y = "Total cases", title = paste0("Epidemic ",plot_epi )) +
   theme(axis.title = element_text(size = 12),

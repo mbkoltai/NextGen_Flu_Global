@@ -27,13 +27,18 @@ overall_store[, Date := as.Date(Date, origin = "1970-01-01")]
 overall_store[, how_many_weeks := month(Date)]
 overall_store[, year := year(Date)]
 overall_store[, month_year := paste0(how_many_weeks, "_", year)]
-num_weeks_mothnth <- overall_store[, .N, by = c("Vacc_scenario", "virus_type", "variable", "how_many_weeks", "year", "month_year")]
-overall_store[num_weeks_mothnth, on = c("Vacc_scenario", "virus_type", "variable", "how_many_weeks", "year", "month_year"), 
-              num_weeks := N]
+# num_weeks_mothnth <- overall_store[, .N, by = c("Vacc_scenario", "virus_type", "variable", "how_many_weeks", "year", "month_year")]
+# overall_store[num_weeks_mothnth, on = c("Vacc_scenario", "virus_type", "variable", "how_many_weeks", "year", "month_year"), 
+#               num_weeks := N]
 
+lambda_estimates <- as.data.table(lambda_estimates)
+lambda_estimates[, foi := as.numeric(foi)]
+lambda_estimates[, weekly := (foi/30.437)*7] # this is the average number of days per month
 
 # add the relevant lambda estimate to each row of overall store (with some name accounting included)
-overall_store[lambda_estimates, on = "virus_type", foi_poisson := as.numeric(foi)/num_weeks]
+overall_store[lambda_estimates, on = "virus_type", foi_poisson := weekly]
+# don't want to include background when there is an epidemic on
+# so mark where epidemic is on
 
 # for each subtype and age group, lambda * proportion susceptle / relevant ascenrtainmentr ates (stored in multipier)
 

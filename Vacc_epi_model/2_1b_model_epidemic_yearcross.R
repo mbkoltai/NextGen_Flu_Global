@@ -14,11 +14,9 @@ incidence_function_2 <- function(demography_input,
                                efficacy_next2 , 
                                previous_summary ) {
   
+  contacts_matrixformat <- input_contacts_fixed
 
-  contacts_matrixformat <- fluEvidenceSynthesis::contact_matrix(as.matrix(relevant_polymod),
-                                                   demography_input, age_groups_model ) 
-  
-  age_group_sizes <- stratify_by_age(demography_input, age_groups_model)
+    age_group_sizes <- stratify_by_age(demography_input, age_groups_model)
   
   population_stratified <- stratify_by_risk(age_group_sizes, risk_ratios_input)
 
@@ -31,10 +29,11 @@ incidence_function_2 <- function(demography_input,
   for(sus_i in 2:num_age_groups){
     susceptibility[sus_i] <-  parameters[susceptibility_pattern[sus_i]]
   }
+
     infectionODEs_epidemic_yearcross(population_stratified = population_stratified,
                                    initial_infected = initial_infected,
                                    calendar_input = calendar_input,
-                                   contacts_matrixformat,
+                                   contacts_matrixformat = contacts_matrixformat,
                                    susceptibility = susceptibility,
                                    transmissibility = parameters[transmisibility_location],
                                    infection_delays = infection_delays, interval = 7,
@@ -174,7 +173,6 @@ infectionODEs_epidemic_yearcross <- function(population_stratified,
       new_cij[lk:(lk + num_age_groups - 1), ll:(ll + num_age_groups - 1)] <- contacts_matrixformat
     }
   }
-
   # extract the relevant dates from the calendar (i.e. exclude those before start time)
   #Update the vaccination calendar
 
@@ -208,7 +206,6 @@ infectionODEs_epidemic_yearcross <- function(population_stratified,
   #Assume that all R become susceptible again at the start of each posterior
   initial_R_prop <- rep(0,no_groups)
   # specify the model
- # browser()
   mod <- gen_seeiir_ag_vacc_waning$new(no_groups = no_groups,
                                        cij = new_cij,
                                        trans = transmissibility,
@@ -800,6 +797,7 @@ run_epidemic_model_yearcross <- function(vaccine_scenarios, year_in_question, be
   
   no_groups <- num_age_groups*3
   # extract immunity inputs
+
   prop_vacc_start <- list(prop_vaccine_compartments = as.numeric(c(immunity_input[1:no_groups])),
                           prop_R_vaccinated = as.numeric(c(immunity_input[(no_groups+1):(2*no_groups)])), 
                           prop_R = as.numeric(rep(0,3*num_age_groups)))
@@ -822,7 +820,7 @@ run_epidemic_model_yearcross <- function(vaccine_scenarios, year_in_question, be
                                                         previous_summary = previous_summary)
   
   
-  
+
   # calculate the sum of cases at the end over the season  
   #total_infections <- rowSums(total_infections_ages)
 
