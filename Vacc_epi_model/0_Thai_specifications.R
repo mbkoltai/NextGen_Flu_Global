@@ -36,7 +36,7 @@ threshold <- 20000
 location <- "Thailand"
 posterior_sample_size <- 10
 set.seed(100887)
-target_scenarios <- c(1,4,28,53,75,142) # change to required
+target_scenarios <- c(1,4,28,53,75,122) # change to required
 
 use_presampled <- F # this is always false for UK - as only have 1000 samples of each
 save_samples <- F # this is always false for UK - as only have 1000 samples of each
