@@ -6,7 +6,7 @@ library(data.table)
 library(ISOcodes)
 
 #load UN population and life tables sourced from https://population.un.org/wpp/Download/Standard/CSV/
- UNLT  <- fread(here::here("WPP2022_Life_Table_Medium.csv"))[MidPeriod == 2019.5 & Sex == "Total"]  # only need combined sexes for 2025
+ UNLT  <- fread(here::here("Data/WPP2022_Life_Table_Abridged_Medium_2022-2100.csv"))[MidPeriod == 2023.5 & Sex == "Total"]  # only need combined sexes for current year
 # UNPOP <- fread(paste0(pth,"/WPP2019_PopulationBySingleAgeSex_2020-2100.csv"))[Time == 2022]       # only need 2022 projections
 
 
@@ -26,10 +26,10 @@ cov_dLE <- function(
     LT,                            # data table with UN life tables,
     r               = 0,           # discount rate
     smr             = 1,           # SMRs adjustment for covid co-morbidities (so if 1.5, assume 50% higher default.)
-    selectCountries = c("GBR"),    # vector of iso3 codes of countries to run
-    selectTime      = "2020-2025", # which UN life-table time-period to use 
+    selectCountries = c("THA"),    # vector of iso3 codes of countries to run
+    selectTime      = "2023",      # which UN life-table time-period to use 
     selectSex       = "Total",     # which UN life-table sex to use
-    weight_method   = "pop_ifr",   # weight method to average LE by age group: "lx" "lxqx" "equal" "pop_ifr"
+    weight_method   = "lxqx",      # weight method to average LE by age group: "lx" "lxqx" "equal" "pop_ifr"
     POP             = NULL         # data table of populations to be supplied if using weight_method=="pop_ifr"
 ){
   
@@ -41,8 +41,8 @@ cov_dLE <- function(
   # age bands to match the model
   AgeBands = data.table(
     AgeBand = seq(1,6,1),
-    start   = c(0,1,5,15,45,65),
-    end     = c(0,4,14,44,64,100)
+    start   = c(0,2,6,12,18,60),
+    end     = c(1,5,11,17,59,100)
   )
 
   #### converts geographical codes between formats - may not need
@@ -205,25 +205,24 @@ cov_dLE <- function(
   return(out[, c("disc.rate","SMR") := NULL]) # for now dropping discount rate & SMR from output as this is known implicitly
 }
 
-
  # Run the thing
  LT_out <- cov_dLE(LT = UNLT, 
                    r = discount_rate, 
                    smr = 1, 
-                   selectCountries = ("GBR"), 
-                   selectTime = "2019", # this may need sorting later! Could run seperately for each section, or make flexible?
+                   selectCountries = ("THA"), 
+                   selectTime = "2023", # this may need sorting later! Could run seperately for each section, or make flexible?
                    selectSex       = "Total",     # which UN life-table sex to use
                    weight_method   = "lxqx", # probably want to use
                    POP = NULL
  )
  
  # match the age bands
- LT_out[AgeBand ==1, age := "[0,0.5)"]
- LT_out[AgeBand ==2, age := "[0.5,5)"]
- LT_out[AgeBand ==3, age := "[5,15)"]
- LT_out[AgeBand ==4, age := "[15,45)"]
- LT_out[AgeBand ==5, age := "[45,65)"]
- LT_out[AgeBand ==6, age := "[65,+)"]
+ LT_out[AgeBand ==1, age := "[0,2)"]
+ LT_out[AgeBand ==2, age := "[2,6)"]
+ LT_out[AgeBand ==3, age := "[6,12)"]
+ LT_out[AgeBand ==4, age := "[12,18)"]
+ LT_out[AgeBand ==5, age := "[18,60)"]
+ LT_out[AgeBand ==6, age := "[60,+)"]
 
  
 # NOT taking account of population size changing each year!

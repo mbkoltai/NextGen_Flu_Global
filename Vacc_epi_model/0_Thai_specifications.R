@@ -35,7 +35,7 @@ threshold <- 20000
 
 location <- "Thailand"
 posterior_sample_size <- 10
-set.seed(100887)
+# set.seed(100887)
 target_scenarios <- c(1,4,28,53,75,122) # change to required
 
 use_presampled <- F # this is always false for UK - as only have 1000 samples of each
@@ -78,10 +78,10 @@ vaccine_scenario_names <- c("No vaccine","Current seasonal","Improved (minimal)"
 "Universal")
 set.seed(5042)
 input_contacts_fixed <- fluEvidenceSynthesis::contact_matrix(as.matrix(relevant_polymod),
-                                     demography_input, age_groups_model )
+                                     popthai[,2], age_groups_model )
 
 
-##### SOURCE AND RUN ######Í
+##### SOURCE AND RUN ######
 
 # The vaccination scenario 
 source(here::here("Vacc_epi_model","1_0_vaccination_scenario_list_Thai_LSHTM.R"))
@@ -92,5 +92,5 @@ source(here::here("Vacc_epi_model","2_0_epidemics_list_thai.R"))# needs updating
 source(here::here("Vacc_epi_model", "0_Main_NextGen.R"))
 # Run all the economics!
 
-source(here::here("Economics", "5_0_run_economics.R"))
+# source(here::here("Economics", "5_0_run_economics.R"))
 

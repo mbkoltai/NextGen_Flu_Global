@@ -136,7 +136,7 @@ for(scen_duration in durations){
         
        waning_years <- 1/(scen_duration*365.25)
        if(waning_years <1 ) {prop_group_vacc = rep(1, 6)} else{
-      prop_group_vacc = c(1/waning_years,1/waning_years,0,0,0,0)}
+      prop_group_vacc = c(1/waning_years,1/waning_years,1/waning_years,1/waning_years,1/waning_years,1/waning_years)}
        
         vaccine_scenarios[[i+1]] = list(
           waning_rate = scen_duration, 
