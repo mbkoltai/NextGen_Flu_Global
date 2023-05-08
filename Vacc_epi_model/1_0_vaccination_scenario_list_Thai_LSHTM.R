@@ -54,9 +54,9 @@ B_matches <- c(
 
 efficacies <- list(
   efficacy_constant_0.9 = c(0.9,0.9),
-  efficacy_constant_0.7 = c(0.6,0.6),
-  efficacy_NOMATCH_0.4 = c(0.6,0.3),
-  efficacy_NOMATCH_0.7 = c(0.9,0.6)
+  efficacy_constant_0.7 = c(0.7,0.7),
+  efficacy_NOMATCH_0.4 = c(0.7,0.4),
+  efficacy_NOMATCH_0.7 = c(0.9,0.7)
 )
 
 # start in march as this is the "year end" / "birthday"
@@ -68,18 +68,30 @@ campaigns <- list(
 # this is the coverage over the dates period
 # i.e. over one year in the year round scenario, and over the 3 months in the 3 month scenario
 coverages <- list(
-  coverage_low = c(0.25, 0.25,rep(0,16)),
-  coverage_mid = c(0.5, 0.5,rep(0,16)),
-  coverage_high = c(0.75, 0.75,rep(0,16))
+  coverage_low_under5 = c(0.25, 0.25,rep(0,16)),
+  coverage_mid_under5 = c(0.5, 0.5,rep(0,16)),
+  coverage_high_under5 = c(0.75, 0.75,rep(0,16)),
+  coverage_low_under11 = c(0.25, 0.25, 0.25,rep(0,15)),
+  coverage_mid_under11 = c(0.5, 0.5, 0.5,rep(0,15)),
+  coverage_high_under11 = c(0.75, 0.75, 0.75,rep(0,15)),
+  coverage_low_2to11 = c(0, 0.25, 0.25,rep(0,15)),
+  coverage_mid_2to11 = c(0, 0.5, 0.5,rep(0,15)),
+  coverage_high_2to11 = c(0, 0.75, 0.75,rep(0,15)),
+  coverage_low_over60 = c(rep(0,5),0.25,rep(0,12)),
+  coverage_mid_over60 = c(rep(0,5),0.5,rep(0,12)),
+  coverage_high_over60 = c(rep(0,5),0.75,rep(0,12)),
+  coverage_low_under5over60 = c(0.25, 0.25,rep(0,3),0.25,rep(0,12)),
+  coverage_mid_under5over60 = c(0.5, 0.5,rep(0,3),0.5,rep(0,12)),
+  coverage_high_under5over60 = c(0.75, 0.75,rep(0,3),0.75,rep(0,12))
 )
 
 durations <- c(
-  1/(365.25*0.5),
-  1/(365.25*1),
-  1/(365.25*2),
-  1/(365.25*3),
-  1/(365.25*4),
-  1/(365.25*5)
+  six_months = 1/(365.25*0.5),
+  one_year = 1/(365.25*1),
+  two_year = 1/(365.25*2),
+  three_year = 1/(365.25*3),
+  four_year = 1/(365.25*4),
+  five_year = 1/(365.25*5)
 )
 
 vaccine_scenarios <- list()
@@ -110,6 +122,7 @@ efficacy_B[1,] <- efficacy_B[2,] <- efficacy_B[3,] <- efficacy_B[4,] <-
   efficacy_B[17,] <- efficacy_B[18,]  <- B_matches
 efficacy_B_copy <- matrix(nrow= 18, ncol = 11)
 
+# no vaccine scenario
 vaccine_scenarios[[1]] <- list(waning_rate = 1, 
                       efficacy_H3 = matrix(0,nrow=18,ncol=10), 
                       efficacy_H1 = matrix(0,nrow=18,ncol=10),
@@ -124,6 +137,8 @@ for(scen_duration in durations){
   for(scen_coverage  in coverages){
     for(scen_campaign in campaigns){
       for(scen_efficacy in efficacies){
+        
+        
         
        efficacy_B_copy[which(efficacy_B=="MATCH")] <- as.numeric(scen_efficacy[1])
        efficacy_B_copy[which(efficacy_B=="NOMATCH")] <- as.numeric(scen_efficacy[2])
@@ -154,6 +169,41 @@ for(scen_duration in durations){
 }
 
 lookup_year <- names(B_matches)
+
+# Tabulate vaccine scenarios
+i <- 1
+# No vaccine scenarios
+vaccine_scenarios_tab <-  cbind(
+  scenario_id = as.integer(i),
+  immunity_duration = "no vaccine",
+  coverage = "no vaccine",
+  campaign = "no vaccine",
+  efficacy = "no vaccine"
+)
+i <- i + 1
+
+
+for(d in 1:length(durations)){
+  for(cov  in 1:length(coverages)){
+    for(camp in 1:length(campaigns)){
+      for(eff in 1:length(efficacies)){
+        
+        vaccine_scenarios_tab <- rbind(
+          cbind(
+            scenario_id = as.integer(i),
+            immunity_duration = names(durations[d]),
+            coverage = names(coverages[cov]),
+            campaign = names(campaigns[camp]),
+            efficacy = names(efficacies[eff])
+          ),
+          vaccine_scenarios_tab
+        ) 
+        i <- i+1
+      }
+    }
+  }
+}
+vaccine_scenarios_tab <- as.data.table(vaccine_scenarios_tab)
 
 # if(exact_efficacies==T){
 #   source("current_efficacy_sensitivity.R")

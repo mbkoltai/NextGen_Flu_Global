@@ -25,18 +25,22 @@ if("tictoc" %in% (.packages())){
 ####### VARIABLES #####
 
 ###### these are for the economics and have not yet been adapted to Thailand
-base_scenario_to_use <- 2 # for the economics
-vacc_delivery_price <- 15.85#20#12#15.85 # for the economics. 
-discount_rate <- 0.035
-qaly_discount_rate <- 0.015
-threshold <- 20000
+base_scenario_to_use <- 1 # for the economics
+societal_perspective <- TRUE
+
+disc.rate.dalys <- 0.03 #c(0,0.03)
+disc.rate.costs <- 0.03
+thai.gdppc <- 7066.2 # Thai 2021 GDP per capita from World Bank.
+# threshold <- 0.5 * thai.gdppc
+threshold <- 160000/31.98 #Thai CET in USD
 
 # the rest
 
 location <- "Thailand"
-posterior_sample_size <- 10
-# set.seed(100887)
-target_scenarios <- c(1,4,28,53,75,122) # change to required
+n_samples <- posterior_sample_size <- 1000
+
+target_scenarios <- c(1,12,132,253,371,610) # seasonal targeting under 5s
+# target_scenarios <- c(1,136,156,277,395,634) # seasonal targeting under 11s
 
 use_presampled <- F # this is always false for UK - as only have 1000 samples of each
 save_samples <- F # this is always false for UK - as only have 1000 samples of each
@@ -55,10 +59,12 @@ max_age <- 77 # average life expectancy - used only for ageing out of the last c
 num_age_groups <- 6
 end_first_year_vaccination <- as.Date("2006-04-01") 
 high_risk <- rep(0,6)
-risk_ratios_input <- matrix(c(high_risk,0,0,0,0,0,0),
-                            ncol = num_age_groups , byrow = T)
+
 susceptibility_pattern <- c(NA, 3,3,3,3,3)
 calculate_FOI <- "Yes" # this should always be No for the UK (as no inter-epidemic period)
+risk_ratios_input <- matrix(c(high_risk,0,0,0,0,0,0),
+                            ncol = num_age_groups , byrow = T)
+
 num_years <- 4
 years <- c(2005:2010)
 #     v3:<2 yr,  v4:2-5 yrs,  v5:6-11 yrs,  v6:12-17 yrs, v7:18-59 yrs, v8:>=60 yrs

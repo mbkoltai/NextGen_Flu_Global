@@ -53,8 +53,9 @@ overall_store[, total_infections := infections + epidemic_cases]
 overall_store[,scenario := as.factor(scenario)]
 INFECTIONS_TIME <- ggplot(overall_store[sample==1],
        aes(x = Date, y = total_infections, group = interaction(sample, scenario), colour =scenario)) + 
-  geom_line() + 
-  facet_grid(variable~virus_type, scales= "free_y")  + scale_colour_manual(values = c("#d73027","orange1", "#91CF60", "#92C5DE", "#3288BD","purple" )) +
+  geom_line(alpha=1) +
+  # geom_ribbon() +
+  facet_grid(virus_type~variable, scales= "free_y")  + scale_colour_manual(values = c("#d73027","orange1", "#91CF60", "#92C5DE", "#3288BD","purple" )) +
   theme_linedraw() + 
   theme(
         axis.text.x = element_text(angle = -90), 

@@ -1,6 +1,6 @@
 #### Economic analysis - deaths
 # This has the deaths by age  and risk group in. 
-deaths_summarised <-death_outcome[, sum(value), by = c("sample", "scenario", "Year", "age" )]
+# deaths_summarised <-death_outcome[, sum(value), by = c("sample", "scenario", "Year", "age" )]
 
 library(data.table)
 library(ISOcodes)
@@ -202,29 +202,33 @@ cov_dLE <- function(
   } else {out <- "Error: Invalid argument for weight_method"}
   
   
-  return(out[, c("disc.rate","SMR") := NULL]) # for now dropping discount rate & SMR from output as this is known implicitly
+  return(out[, c("SMR") := NULL]) # for now dropping discount rate & SMR from output as this is known implicitly
 }
 
- # Run the thing
- LT_out <- cov_dLE(LT = UNLT, 
-                   r = discount_rate, 
-                   smr = 1, 
-                   selectCountries = ("THA"), 
-                   selectTime = "2023", # this may need sorting later! Could run seperately for each section, or make flexible?
-                   selectSex       = "Total",     # which UN life-table sex to use
-                   weight_method   = "lxqx", # probably want to use
-                   POP = NULL
- )
+ # Generate output
+ # disc.rate.dalys <- c(0,0.03)
  
- # match the age bands
- LT_out[AgeBand ==1, age := "[0,2)"]
- LT_out[AgeBand ==2, age := "[2,6)"]
- LT_out[AgeBand ==3, age := "[6,12)"]
- LT_out[AgeBand ==4, age := "[12,18)"]
- LT_out[AgeBand ==5, age := "[18,60)"]
- LT_out[AgeBand ==6, age := "[60,+)"]
+ LT_out <- c()
+ for (discount_rate in disc.rate.dalys){
+   LT_out <- rbind(
+     LT_out,
+     cov_dLE(LT = UNLT, 
+             r = discount_rate, 
+             smr = 1, 
+             selectCountries = ("THA"), 
+             selectTime = "2023", # this may need sorting later
+             selectSex       = "Total", 
+             weight_method   = "lxqx",
+             POP = NULL
+     )
+   )
+ }
+ 
+# match the age bands and drop columns not needed
+LT_out[, age := ages[AgeBand]][,AgeBand:=NULL][,country:=NULL]
+colnames(LT_out)[colnames(LT_out) == "disc.rate"] <- "disc.rate.dalys" 
+# merge with outcomes and calculate YLLs and DALYs
 
- 
-# NOT taking account of population size changing each year!
-deaths_summarised[LT_out, on = "age", d_LEx := d_LEx ] 
-deaths_summarised[, death_QALYS := V1 *d_LEx]
+outcomes <-  merge(outcomes,LT_out,by="age",allow.cartesian = TRUE)
+outcomes[,YLLs := Deaths * d_LEx]
+outcomes[,DALYs := YLLs + YLDs]

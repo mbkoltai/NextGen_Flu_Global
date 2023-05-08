@@ -309,20 +309,29 @@ save(total_vaccines, file = here::here("Vacc_epi_model", "Model_output", paste0(
 
 one_set <- plot_subset[virus_type == "AH1N1",]
 
-one_set[Date < as.Date("1996-09-01"), season := 1995 ]
-one_set[Date < as.Date("1997-09-01")  & Date >= as.Date("1996-09-01"), season := 1996 ]
-one_set[Date < as.Date("1998-09-01")  & Date >= as.Date("1997-09-01"), season := 1997 ]
-one_set[Date < as.Date("1999-09-01")  & Date >= as.Date("1998-09-01"), season := 1998 ]
-one_set[Date < as.Date("2000-09-01")  & Date >= as.Date("1999-09-01"), season := 1999 ]
-one_set[Date < as.Date("2001-09-01")  & Date >= as.Date("2000-09-01"), season := 2000 ]
-one_set[Date < as.Date("2002-09-01")  & Date >= as.Date("2001-09-01"), season := 2001 ]
-one_set[Date < as.Date("2003-09-01")  & Date >= as.Date("2002-09-01"), season := 2002 ]
-one_set[Date < as.Date("2004-09-01")  & Date >= as.Date("2003-09-01"), season := 2003 ]
-one_set[Date < as.Date("2005-09-01")  & Date >= as.Date("2004-09-01"), season := 2004 ]
-one_set[Date < as.Date("2006-09-01")  & Date >= as.Date("2005-09-01"), season := 2005 ]
-one_set[Date < as.Date("2007-09-01")  & Date >= as.Date("2006-09-01"), season := 2006 ]
-one_set[Date < as.Date("2008-09-01")  & Date >= as.Date("2007-09-01"), season := 2007 ]
-one_set[Date < as.Date("2009-09-01")  & Date >= as.Date("2008-09-01"), season := 2008 ]
+# one_set[Date < as.Date("1996-09-01"), season := 1995 ]
+# one_set[Date < as.Date("1997-09-01")  & Date >= as.Date("1996-09-01"), season := 1996 ]
+# one_set[Date < as.Date("1998-09-01")  & Date >= as.Date("1997-09-01"), season := 1997 ]
+# one_set[Date < as.Date("1999-09-01")  & Date >= as.Date("1998-09-01"), season := 1998 ]
+# one_set[Date < as.Date("2000-09-01")  & Date >= as.Date("1999-09-01"), season := 1999 ]
+# one_set[Date < as.Date("2001-09-01")  & Date >= as.Date("2000-09-01"), season := 2000 ]
+# one_set[Date < as.Date("2002-09-01")  & Date >= as.Date("2001-09-01"), season := 2001 ]
+# one_set[Date < as.Date("2003-09-01")  & Date >= as.Date("2002-09-01"), season := 2002 ]
+# one_set[Date < as.Date("2004-09-01")  & Date >= as.Date("2003-09-01"), season := 2003 ]
+# one_set[Date < as.Date("2005-09-01")  & Date >= as.Date("2004-09-01"), season := 2004 ]
+# one_set[Date < as.Date("2006-09-01")  & Date >= as.Date("2005-09-01"), season := 2005 ]
+# one_set[Date < as.Date("2007-09-01")  & Date >= as.Date("2006-09-01"), season := 2006 ]
+# one_set[Date < as.Date("2008-09-01")  & Date >= as.Date("2007-09-01"), season := 2007 ]
+# one_set[Date < as.Date("2009-09-01")  & Date >= as.Date("2008-09-01"), season := 2008 ]
+
+one_set[Date < as.Date("2006-03-01")  & Date >= as.Date("2005-03-01"), season := 2005 ]
+one_set[Date < as.Date("2007-03-01")  & Date >= as.Date("2006-03-01"), season := 2006 ]
+one_set[Date < as.Date("2008-03-01")  & Date >= as.Date("2007-03-01"), season := 2007 ]
+one_set[Date < as.Date("2009-03-01")  & Date >= as.Date("2008-03-01"), season := 2008 ]
+one_set[Date < as.Date("2006-03-01")  & Date >= as.Date("2005-03-01"), Season := "2005to2006" ]
+one_set[Date < as.Date("2007-03-01")  & Date >= as.Date("2006-03-01"), Season := "2006to2007" ]
+one_set[Date < as.Date("2008-03-01")  & Date >= as.Date("2007-03-01"), Season := "2007to2008" ]
+one_set[Date < as.Date("2009-03-01")  & Date >= as.Date("2008-03-01"), Season := "2008to2009" ]
 
 one_set[, given := total_vacc - shift(total_vacc, type = "lag", n=1L), by = c("season", "scenario_nice")]
 one_set[given < 0, given := 0]
@@ -335,11 +344,12 @@ one_set_c <- dcast.data.table(one_set, Vacc_scenario + Year + age_group + scenar
 one_set_c[, Vaccinations := Risk_group1]
 
 temp <- one_set
-temp_c <- dcast.data.table(temp, Vacc_scenario + season + age_group + scenario_nice  ~ risk_group,
+temp_c <- dcast.data.table(temp, Vacc_scenario + Season + age_group + scenario_nice  ~ risk_group,
                            value.var = "given", fun.aggregate = sum)
 temp_c[, Vaccinations := Risk_group1]
+temp_c <- temp_c[!is.na(Season)]
 
-VACCS_GIVEN <- ggplot(temp_c, aes(x = season, y =Vaccinations/1000000, fill = age_group, group = age_group)) + 
+VACCS_GIVEN <- ggplot(temp_c, aes(x = Season, y =Vaccinations/1000000, fill = age_group, group = age_group)) + 
    geom_bar(stat="identity") + 
    facet_grid(. ~ scenario_nice) + 
    theme_linedraw() + 

@@ -241,8 +241,14 @@ B_EPIS <-ggplot(fluB_epidemics, aes(x = date)) +
   lims(y = c(0,163))
   
 #grid.arrange(AH1_EPIS, AH3_EPIS, B_EPIS, ncol= 1)
-
-
+EPIS <-ggplot(rbind(fluAH1_epidemics,fluAH3_epidemics,fluB_epidemics), aes(x = date)) + 
+  geom_line(aes(y=flu), colour = "red") + 
+  geom_line(aes(y = visualiser)) + 
+  geom_point(aes(y = visualiser)) + 
+  theme_linedraw() + 
+  labs(y = "Reported cases") + 
+  lims(y = c(0,163)) +
+  facet_grid(Type~.)
 
 data(popM)
 popM <- data.table(popM)
